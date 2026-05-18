@@ -1,0 +1,6 @@
+[lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]   # line length — handled by formatter
+
+[lint.per-file-ignores]
+"tests/*" = ["F841"]  # unused variables in tests OK

@@ -1,0 +1,30 @@
+id: ai_prs
+category: social_signals
+weight: 0.9
+severity: high
+description: >
+  Detects a pattern of AI agent-generated PRs: burst over a short period,
+  authors with empty accounts, and zero merges or comments.
+
+inputs:
+  - github.recent_prs
+
+thresholds:
+  burst_window_days: 7
+  min_prs_in_burst: 5
+  max_author_followers: 1
+  max_author_repos: 3
+  min_dead_pr_ratio: 0.85  # raised from 0.7 — active projects have open PRs
+
+scoring:
+  method: step
+  score_if_triggered: 70
+  score_if_clean: 0
+
+evidence_template: >
+  {burst_count} PRs in {burst_days} days,
+  {dead_ratio_pct}% with no merge or comment,
+  {suspicious_authors}% suspicious authors
+
+tags: [prs, agent, ai, social]
+severity: high

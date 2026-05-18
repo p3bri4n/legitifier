@@ -1,0 +1,11 @@
+# CODEOWNERS
+# Entries here require review from the listed owners before merging.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Seed database requires maintainer review — high trust required
+data/seed.jsonl @p3bri4n
+data/seed_schema.md @p3bri4n
+
+# Core scoring logic — changes need careful review
+legitifier_pkg/core/ @p3bri4n
+legitifier_pkg/data/ @p3bri4n

@@ -1,0 +1,49 @@
+# Seed Database Schema
+
+`data/seed.jsonl` is a public, versioned database of known scam actors and repositories.
+It is loaded at startup and merged with the user's local scan history.
+
+## Rules
+
+- **Append-only** — never edit or delete existing entries. Add a new entry with `supersedes` if you need to correct one.
+- **Evidence required** — every entry needs a `note` explaining why it was added.
+- **Conservative by default** — prefer `probable` over `certain` unless you have strong proof.
+
+## Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `owner` \| `repo` \| `contributor` | ✅ | What the entry refers to |
+| `login` | string | if type=owner/contributor | GitHub login |
+| `slug` | string | if type=repo | `owner/repo` format |
+| `verdict` | `SCAM` \| `SUSPICIOUS` \| `CLEAN` | ✅ | Assessment |
+| `confidence` | `certain` \| `probable` \| `unsure` | ✅ | How sure we are |
+| `source` | string | ✅ | Where this came from |
+| `note` | string | ✅ | Evidence or reasoning |
+| `added` | `YYYY-MM-DD` | ✅ | Date added |
+| `supersedes` | string | — | login or slug of entry this overrides |
+
+## Sources
+
+- `manual` — reviewed and added by a maintainer
+- `wall-of-shames` — from [Wall-of-Shames/scammer-analysis-guide](https://github.com/Wall-of-Shames/scammer-analysis-guide)
+- `starscout` — from the [CMU StarScout dataset](https://github.com/hehao98/StarScout)
+- `community` — submitted by a user and reviewed
+
+## Contributing
+
+Open a PR adding lines to `data/seed.jsonl`. Include:
+1. Reproducible evidence in `note`
+2. Link to source material in `source` or `note`
+3. Conservative confidence level — when in doubt, use `probable`
+
+Do not submit entries based solely on a high legitifier score.
+Human review is required before merging into the seed.
+
+## Example entries
+
+```jsonl
+{"type": "owner", "login": "fake-ai-org", "verdict": "SCAM", "confidence": "certain", "source": "manual", "note": "3 repos all wrapping OpenRouter, Telegram premium upsell", "added": "2026-05-16"}
+{"type": "repo", "slug": "fake-ai-org/wormgpt", "verdict": "SCAM", "confidence": "certain", "source": "wall-of-shames", "note": "50 lines, API key stolen from users", "added": "2026-05-16"}
+{"type": "owner", "login": "legit-researcher", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Published author, verified academic affiliation", "added": "2026-05-16"}
+```

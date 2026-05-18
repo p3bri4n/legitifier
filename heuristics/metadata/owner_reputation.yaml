@@ -1,0 +1,23 @@
+id: owner_reputation
+category: repo_metadata
+weight: 1.2
+severity: critical
+description: >
+  Owner or repo is referenced in the public seed or local scans
+  as suspicious or a confirmed scam.
+
+inputs:
+  - local_db.owner_reputation
+
+thresholds:
+  min_score_to_trigger: 40
+
+scoring:
+  method: passthrough
+  score_if_clean: 0
+
+evidence_template: >
+  Known owner/repo: verdict={verdict} (confidence={confidence}) — {note}
+
+tags: [reputation, owner, seed]
+severity: critical

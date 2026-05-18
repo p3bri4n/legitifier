@@ -1,0 +1,48 @@
+id: telegram_funnel
+category: content_claims
+weight: 1.0
+severity: critical
+description: >
+  Detects the Telegram upsell pattern — a hallmark of scam AI/hacker tools.
+  Triggers only when Telegram links are combined with commercial amplifiers
+  (premium, crypto, payment, uncensored) to avoid false positives on
+  legitimate community Telegram groups.
+  Source: Wall-of-Shames scammer-analysis-guide.
+
+inputs:
+  - github.readme
+  - github.code_snippets
+
+thresholds:
+  telegram_patterns:
+    - "t.me/"
+    - "telegram.me/"
+    - "telegram.org"
+    - "join our telegram"
+    - "telegram for premium"
+    - "telegram premium"
+    - "telegram channel"
+    - "contact telegram"
+    - "telegram bot"
+
+  # Amplifiers — if present alongside Telegram, score is boosted
+  amplifier_patterns:
+    - "premium"
+    - "uncensored"
+    - "unlimited"
+    - "crypto"
+    - "payment"
+    - "paid version"
+    - "buy now"
+
+scoring:
+  method: step
+  score_if_triggered: 85
+  score_if_clean: 0
+
+evidence_template: >
+  Telegram funnel detected: {telegram_matches}
+  {amplifier_note}
+
+tags: [telegram, funnel, scam, social-engineering]
+severity: critical

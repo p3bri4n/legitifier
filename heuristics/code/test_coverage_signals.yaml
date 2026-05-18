@@ -1,0 +1,49 @@
+id: test_coverage_signals
+category: code_quality
+weight: 0.8
+severity: medium
+description: >
+  Analyzes test quality signals without executing code.
+  Detects missing tests, empty test patterns, and false coverage claims.
+  A legitimate project usually has real tests; vibe coding projects either
+  have none, or have tests that verify nothing.
+  Source: Wall-of-Shames scammer-analysis-guide, general vibe coding patterns.
+
+inputs:
+  - github.code_snippets
+  - github.readme
+
+thresholds:
+  # Minimum ratio of test files to source files to avoid triggering
+  min_test_to_source_ratio: 0.05
+
+  # Patterns in test files that indicate empty/useless tests
+  empty_test_patterns:
+    - "assert True"
+    - "assert result is not None"
+    - "assert response is not None"
+    - "assert output is not None"
+    - "pass  # TODO"
+    - "pass # TODO"
+    - "# TODO: add tests"
+    - "# TODO: implement"
+
+  # Coverage badge patterns in README claiming high coverage
+  coverage_badge_patterns:
+    - "coverage-100"
+    - "coverage-99"
+    - "coverage-98"
+    - "codecov"
+    - "coveralls"
+
+scoring:
+  method: step
+  score_if_triggered: 45
+  score_if_clean: 0
+
+evidence_template: >
+  Test quality: {test_files} test file(s) for {source_files} source file(s)
+  (ratio: {ratio}){empty_note}{badge_note}
+
+tags: [tests, coverage, quality, vibe-coding]
+severity: medium

@@ -1,0 +1,41 @@
+# legitifier seed database
+# Format: one JSON object per line
+# Fields: type, login|slug, verdict, confidence, source, note, added
+# Rules:
+#   - append-only: never edit existing entries, add new ones with supersedes
+#   - sources: manual | wall-of-shames | starscout | community
+#   - confidence: certain | probable | unsure
+#
+# Sources:
+#   wall-of-shames: https://github.com/Wall-of-Shames/scammer-analysis-guide
+#   starscout:      https://github.com/hehao98/StarScout
+
+# ── Known scam patterns (owners) ─────────────────────────────────────────────
+# These accounts follow the WormGPT/DarkGPT playbook:
+# edgy name, minimal code, matrix UI, Telegram upsell, crypto payment
+
+{"type": "owner", "login": "wormgpt-official", "verdict": "SCAM", "confidence": "probable", "source": "manual", "note": "WormGPT variant, Telegram upsell pattern, minimal code", "added": "2026-05-16"}
+{"type": "owner", "login": "darkgpt-team", "verdict": "SCAM", "confidence": "probable", "source": "manual", "note": "DarkGPT clone, fake hacker aesthetic, no real model", "added": "2026-05-16"}
+{"type": "owner", "login": "evilgpt", "verdict": "SCAM", "confidence": "probable", "source": "manual", "note": "API wrapper sold as uncensored local AI", "added": "2026-05-16"}
+
+# ── Known scam repos ──────────────────────────────────────────────────────────
+
+{"type": "repo", "slug": "wormgpt-official/wormgpt", "verdict": "SCAM", "confidence": "certain", "source": "wall-of-shames", "note": "50 lines of code, OpenRouter wrapper, Telegram premium upsell", "added": "2026-05-16"}
+{"type": "repo", "slug": "chaos-gpt/chaosGPT", "verdict": "SUSPICIOUS", "confidence": "probable", "source": "manual", "note": "Claims autonomous destruction capability, no actual model", "added": "2026-05-16"}
+
+# ── Suspicious but unconfirmed ────────────────────────────────────────────────
+
+{"type": "owner", "login": "ai-hacker-tools", "verdict": "SUSPICIOUS", "confidence": "unsure", "source": "manual", "note": "Multiple repos with identical README structure and Telegram links", "added": "2026-05-16"}
+
+# ── Whitelist — known legitimate owners and repos ─────────────────────────────
+# CLEAN entries cap the final score at SUSPICIOUS max, preventing false positives.
+# 'certain' confidence is allowed for verified organizations without external source.
+
+{"type": "owner", "login": "huggingface", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Verified organization, authors of transformers/diffusers/datasets", "added": "2026-05-16"}
+{"type": "owner", "login": "facebookresearch", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Meta AI Research — LLaMA, FAISS, detectron2", "added": "2026-05-16"}
+{"type": "owner", "login": "google-deepmind", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Google DeepMind — Gemma, AlphaFold", "added": "2026-05-16"}
+{"type": "owner", "login": "microsoft", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Microsoft — verified organization", "added": "2026-05-16"}
+{"type": "owner", "login": "openai", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "OpenAI — verified organization", "added": "2026-05-16"}
+{"type": "owner", "login": "anthropics", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Anthropic — verified organization", "added": "2026-05-16"}
+{"type": "owner", "login": "mistralai", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Mistral AI — verified organization", "added": "2026-05-16"}
+{"type": "owner", "login": "ggerganov", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Author of llama.cpp and whisper.cpp", "added": "2026-05-16"}

@@ -1,0 +1,30 @@
+id: requirements_chaos
+category: code_quality
+weight: 0.7
+severity: medium
+description: >
+  Detects dependency chaos in requirements.txt — duplicate packages with
+  conflicting versions, or large numbers of unused-looking dependencies.
+  Indicates copy-pasted or AI-generated requirements without understanding.
+  Source: Wall-of-Shames scammer-analysis-guide.
+
+inputs:
+  - github.code_snippets
+
+thresholds:
+  # Minimum duplicate packages to trigger
+  min_duplicate_packages: 1
+  # Max ratio of requirements lines to actual code lines (if very high = bloat)
+  max_req_to_code_ratio: 3.0
+
+scoring:
+  method: step
+  score_if_triggered: 45
+  score_if_clean: 0
+
+evidence_template: >
+  Requirements chaos: {duplicate_count} duplicate package(s) with conflicting versions
+  ({duplicates})
+
+tags: [dependencies, requirements, quality]
+severity: medium

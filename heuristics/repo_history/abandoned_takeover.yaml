@@ -1,0 +1,31 @@
+id: abandoned_takeover
+category: repo_history
+weight: 1.0
+severity: critical
+description: >
+  Detects a legitimate repo that was abandoned then suddenly revived:
+  long dormancy followed by a commit burst, typical of a malicious actor
+  or automated agent taking over.
+
+inputs:
+  - github.commit_timeline
+  - github.created_at
+  - github.pushed_at
+
+thresholds:
+  min_dormant_months: 6
+  burst_window_months: 2
+  min_burst_commits: 15
+  min_repo_age_days: 180
+
+scoring:
+  method: step
+  score_if_triggered: 80
+  score_if_clean: 0
+
+evidence_template: >
+  Dormant for {dormant_months} months then {burst_commits} commits
+  in {burst_months} months (repo created {repo_age_days} days ago)
+
+tags: [history, dormancy, takeover, commits]
+severity: critical

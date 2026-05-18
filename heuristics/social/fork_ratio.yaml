@@ -1,0 +1,27 @@
+id: fork_ratio
+category: social_signals
+weight: 0.6
+severity: medium
+description: >
+  A very low fork-to-star ratio indicates nobody is reusing the code,
+  contradicting high popularity.
+
+inputs:
+  - github.stars
+  - github.forks
+
+thresholds:
+  min_stars_to_trigger: 200
+  min_ratio: 0.03        # organic repos average 0.10-0.20; 0.03 filters only extreme cases
+  min_repo_age_days: 365 # young repos naturally have low fork ratio
+
+scoring:
+  method: step
+  score_if_triggered: 50
+  score_if_clean: 0
+
+evidence_template: >
+  Fork/star ratio: {ratio} ({forks} forks for {stars} stars)
+
+tags: [forks, stars, social]
+severity: medium

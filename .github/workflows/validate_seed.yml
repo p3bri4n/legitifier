@@ -1,0 +1,38 @@
+name: Validate Seed
+
+on:
+  pull_request:
+    paths:
+      - "data/seed.jsonl"
+
+jobs:
+  validate:
+    name: Validate seed.jsonl
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed to compare with base branch
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pydantic
+
+      - name: Validate format and rules
+        run: python scripts/validate_seed.py --against ${{ github.base_ref }}
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### ❌ Seed validation failed\n\nPlease check the errors above and refer to [data/seed_schema.md](data/seed_schema.md) for the contribution rules.\n\nKey rules:\n- \`confidence: certain\` requires an external source (\`wall-of-shames\`, \`starscout\`, \`community\`)\n- Existing entries must not be modified or deleted\n- All fields are required`
+            })

@@ -1,0 +1,22 @@
+id: account_age
+category: repo_metadata
+weight: 0.7
+severity: medium
+description: >
+  A recently created account with a popular repo is suspicious.
+
+inputs:
+  - github.owner_created_at
+
+thresholds:
+  min_account_age_days: 90
+
+scoring:
+  method: step
+  score_if_triggered: 55
+  score_if_clean: 0
+
+evidence_template: "Owner account created {age_days} days ago (threshold: {min_days} days)"
+
+tags: [account, age, metadata]
+severity: medium

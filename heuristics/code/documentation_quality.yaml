@@ -1,0 +1,38 @@
+id: documentation_quality
+category: code_quality
+weight: 0.6
+severity: medium
+description: >
+  Detects poor documentation signals — a hallmark of vibe coding and
+  AI-generated projects without real understanding behind them.
+  Legitimate projects invest in comments, docstrings, and meaningful READMEs.
+  Vibe coding produces code that runs but explains nothing.
+
+inputs:
+  - github.code_snippets
+  - github.readme
+
+thresholds:
+  # README shorter than this (chars) is suspicious for a starred project
+  min_readme_length: 500
+
+  # Minimum ratio of comment/docstring lines to code lines
+  min_comment_ratio: 0.03   # 3% — very permissive, just catches total absence
+
+  # Minimum meaningful README sections (##, ###, or bold titles)
+  min_readme_sections: 2
+
+  # Minimum source files to apply the check (avoid penalizing tiny projects)
+  min_source_files: 3
+
+scoring:
+  method: step
+  score_if_triggered: 35
+  score_if_clean: 0
+
+evidence_template: >
+  Documentation quality: README {readme_length} chars{readme_note},
+  comment ratio {comment_ratio_pct}%{comment_note}{section_note}
+
+tags: [documentation, comments, readme, quality, vibe-coding]
+severity: medium

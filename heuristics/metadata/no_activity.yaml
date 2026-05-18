@@ -1,0 +1,26 @@
+id: no_activity
+category: repo_metadata
+weight: 0.9
+severity: high
+description: >
+  Very popular repo with zero open issues and no recent commits —
+  sign of a non-existent community.
+
+inputs:
+  - github.stars
+  - github.open_issues
+  - github.commit_count
+
+thresholds:
+  min_stars_to_trigger: 50
+
+scoring:
+  method: step
+  score_if_triggered: 60
+  score_if_clean: 0
+
+evidence_template: >
+  {stars} stars but 0 open issues and 0 recent commits
+
+tags: [issues, commits, activity, metadata]
+severity: high

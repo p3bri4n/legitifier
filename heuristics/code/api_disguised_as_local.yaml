@@ -1,0 +1,67 @@
+id: api_disguised_as_local
+category: code_quality
+weight: 1.0
+severity: critical
+description: >
+  Detects a repo presenting itself as a local/open source AI but
+  actually calling an external paid API in its code.
+
+inputs:
+  - github.code_snippets
+
+thresholds:
+  api_patterns:
+    - "openai.com"
+    - "from openai import"
+    - "import openai"
+    - "OpenAI("
+    - "anthropic.com"
+    - "from anthropic import"
+    - "import anthropic"
+    - "Anthropic("
+    - "generativelanguage.googleapis.com"
+    - "google.generativeai"
+    - "import google.generativeai"
+    - "vertexai"
+    - "api.mistral.ai"
+    - "from mistralai import"
+    - "MistralClient("
+    - "api.cohere.com"
+    - "cohere.Client("
+    - "import cohere"
+    - "openrouter.ai"
+    - "api.groq.com"
+    - "from groq import"
+    - "api.together.xyz"
+    - "replicate.com/api"
+    - "import replicate"
+    - "api-inference.huggingface.co"
+    - "openai.azure.com"
+
+  extensions: [".py", ".js", ".ts", ".go", ".rs", ".java"]
+
+  local_claim_patterns:
+    - "run locally"
+    - "fully local"
+    - "no api"
+    - "no api key"
+    - "offline"
+    - "private"
+    - "on-device"
+    - "local llm"
+    - "open source model"
+    - "sans api"
+    - "en local"
+    - "modèle local"
+
+scoring:
+  method: step
+  score_if_triggered: 90
+  score_if_clean: 0
+
+evidence_template: >
+  External API detected ({api_matches}) in a repo claiming to run locally
+  (claims found: {local_claims})
+
+tags: [api, local, deception, code]
+severity: critical

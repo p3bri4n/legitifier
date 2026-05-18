@@ -1,0 +1,29 @@
+id: stars_velocity
+category: social_signals
+weight: 0.8
+severity: high
+description: >
+  Detects an artificial spike in star acquisition (star buying or coordinated
+  campaign) by analyzing the velocity of star acquisition on a sample of stargazers.
+
+inputs:
+  - github.stargazers_sample
+  - github.stars
+
+thresholds:
+  spike_ratio: 10
+  spike_window_days: 3
+  min_stars_to_trigger: 500
+  min_spike_stars_absolute: 100  # spike must be large in absolute terms too
+
+scoring:
+  method: step
+  score_if_triggered: 75
+  score_if_clean: 0
+
+evidence_template: >
+  {spike_stars} stars acquired in {spike_days} days
+  (baseline average: {avg_stars_per_day}/day)
+
+tags: [stars, velocity, social]
+severity: high

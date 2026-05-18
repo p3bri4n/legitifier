@@ -1,0 +1,25 @@
+id: contributor_reputation
+category: social_signals
+weight: 0.9
+severity: high
+description: >
+  PR authors on this repo appear in the seed or local scans as known scam actors.
+  Network signal — an account contributing to multiple fraudulent repos is
+  likely a coordinated actor.
+
+inputs:
+  - local_db.contributor_reputation
+
+thresholds:
+  min_score_to_trigger: 30
+
+scoring:
+  method: passthrough
+  score_if_clean: 0
+
+evidence_template: >
+  {flagged_count} suspicious contributor(s) out of {sample_size} analyzed:
+  {flagged_logins}
+
+tags: [reputation, contributors, network, seed]
+severity: high

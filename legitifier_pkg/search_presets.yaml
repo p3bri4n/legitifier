@@ -1,0 +1,27 @@
+# legitifier search presets
+# Each preset defines a GitHub search query targeting suspicious repositories.
+
+presets:
+  scam-hunter:
+    description: "AI repos with high stars but very low forks — classic scam ratio"
+    query: "topic:ai stars:>200 forks:<20 created:>2024-01-01 language:python"
+
+  vibe-coding:
+    description: "Repos with many stars but no recent activity — vibe coding / portfolio padding"
+    query: "topic:ai stars:>1000 pushed:<2024-06-01"
+
+  fresh-suspect:
+    description: "Recently created repos with suspicious star counts"
+    query: "topic:llm stars:>500 created:>2024-06-01"
+
+  wormgpt-variants:
+    description: "WormGPT / DarkGPT clone pattern"
+    query: "topic:worm-gpt OR topic:darkgpt OR topic:fraudgpt stars:>10"
+
+  api-wrapper:
+    description: "Repos claiming to be local AI but likely just API wrappers"
+    query: "topic:local-llm stars:>100 forks:<15 language:python"
+
+  educational:
+    description: "Honest educational repos — simulators, tutorials, learning projects"
+    query: "topic:educational stars:>50 topic:python OR topic:tutorial stars:>50 topic:computer-science"

@@ -1,0 +1,31 @@
+id: readme_llm_analysis
+category: content_claims
+weight: 1.0
+severity: high
+description: >
+  Semantic analysis of the README by LLM: buzzword density,
+  claim-to-proof ratio, technical coherence, detected red flags.
+
+inputs:
+  - llm.buzzword_density
+  - llm.claim_proof_ratio
+  - llm.technical_coherence
+  - llm.red_flags
+
+thresholds:
+  skip_if_missing: true
+
+scoring:
+  method: weighted_average
+  weights:
+    buzzword_density: 0.3
+    claim_proof_ratio: 0.4
+    technical_coherence: 0.3
+
+evidence_template: >
+  Red flags: {red_flags} (buzzwords={buzzword_density}/10,
+  unproven claims={claim_proof_ratio}/10,
+  technical incoherence={technical_coherence}/10)
+
+tags: [readme, llm, content, claims]
+severity: high

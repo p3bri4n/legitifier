@@ -1,0 +1,28 @@
+id: commit_burst
+category: repo_metadata
+weight: 0.8
+severity: high
+description: >
+  Repo with a burst of commits at creation then no activity —
+  typical pattern of a fake project.
+
+inputs:
+  - github.created_at
+  - github.pushed_at
+  - github.commit_count
+
+thresholds:
+  max_repo_age_days: 14
+  min_commits: 1
+  min_dormant_days: 60
+
+scoring:
+  method: step
+  score_if_triggered: 65
+  score_if_clean: 0
+
+evidence_template: >
+  {commit_count} commits in {repo_age_days} days, then dormant for {days_since_push} days
+
+tags: [commits, activity, metadata]
+severity: high

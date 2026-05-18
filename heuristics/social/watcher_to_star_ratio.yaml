@@ -1,0 +1,29 @@
+id: watcher_to_star_ratio
+category: social_signals
+weight: 0.8
+severity: high
+description: >
+  A very low watcher-to-star ratio indicates nobody actually follows the repo
+  for updates, contradicting claimed popularity. Organic repos average 0.005-0.030;
+  manipulated repos can fall to 0.001.
+  Source: Awesome Agents investigation (April 2026), CMU StarScout ICSE 2026.
+
+inputs:
+  - github.stars
+  - github.watchers
+
+thresholds:
+  min_stars_to_trigger: 500
+  max_ratio: 0.003   # below this = suspicious (10x lower than organic baseline)
+
+scoring:
+  method: step
+  score_if_triggered: 65
+  score_if_clean: 0
+
+evidence_template: >
+  Watcher/star ratio: {ratio} ({watchers} watchers for {stars} stars)
+  — organic baseline: 0.005-0.030
+
+tags: [watchers, stars, engagement, social]
+severity: high

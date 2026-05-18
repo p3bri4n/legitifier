@@ -1,0 +1,27 @@
+id: low_activity_stargazers
+category: social_signals
+weight: 1.0
+severity: high
+description: >
+  Detects a high proportion of empty accounts among stargazers
+  (accounts with 0 followers and ≤2 public repos).
+
+inputs:
+  - github.stargazers_sample
+
+thresholds:
+  max_public_repos: 2
+  max_followers: 0
+  min_suspicious_ratio: 0.4
+
+scoring:
+  method: linear
+  score_if_triggered: 80
+  score_if_clean: 0
+
+evidence_template: >
+  {suspicious_count}/{sample_size} suspicious stargazers ({ratio_pct}% of sample,
+  {bought_profile_count} aged-but-empty accounts)
+
+tags: [stars, bots, social]
+severity: high

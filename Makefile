@@ -1,0 +1,48 @@
+.PHONY: install install-llm install-all test lint coverage clean bump help
+
+VENV := .venv
+PYTHON := $(VENV)/bin/python
+
+help:
+	@echo "Available commands:"
+	@echo "  make install      — create venv and install core + dev deps"
+	@echo "  make install-llm  — add LLM support (OpenAI, Anthropic, Ollama)"
+	@echo "  make install-all  — install everything"
+	@echo "  make test         — run test suite"
+	@echo "  make lint         — run ruff linter"
+	@echo "  make coverage     — run tests with coverage report"
+	@echo "  make bump         — bump version to YYYY.MMDD.hhmm"
+	@echo "  make clean        — remove venv and caches"
+
+$(VENV):
+	uv venv $(VENV)
+
+install: $(VENV)
+	uv pip install -e ".[dev,collect]"
+	@echo ""
+	@echo "✅ Done. Activate with: source $(VENV)/bin/activate"
+
+install-llm: $(VENV)
+	uv pip install -e ".[dev,collect,llm]"
+	@echo ""
+	@echo "✅ Done. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL."
+
+install-all: install-llm
+
+test:
+	$(PYTHON) -m pytest tests/ -v
+
+lint:
+	$(VENV)/bin/ruff check .
+
+coverage:
+	$(PYTHON) -m pytest tests/ --cov=legitifier_pkg --cov-report=term-missing
+
+bump:
+	$(PYTHON) scripts/bump_version.py
+
+clean:
+	rm -rf $(VENV) .coverage __pycache__ .pytest_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -name "*.pyc" -delete 2>/dev/null || true
+	@echo "✅ Cleaned."
