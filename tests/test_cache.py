@@ -1,5 +1,5 @@
 import time
-from pathlib import Path
+from datetime import UTC
 
 import pytest
 
@@ -18,8 +18,8 @@ class TestFetchCache:
         assert result == {"stars": 100}
 
     def test_datetime_serialization(self, cache):
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+        now = datetime.now(UTC)
         cache.set("owner/repo", {"created_at": now, "stars": 42})
         result = cache.get("owner/repo")
         assert isinstance(result["created_at"], datetime)

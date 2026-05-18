@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from legitifier_pkg.analyzers.social import SocialAnalyzer
 from legitifier_pkg.core.models import HeuristicConfig, ScoringConfig
@@ -17,7 +17,7 @@ def _config(heuristic_id: str, thresholds: dict) -> HeuristicConfig:
 
 
 def _make_sample(n: int, days_ago: int = 0, followers: int = 0, repos: int = 0) -> list[dict]:
-    base = datetime.now(timezone.utc) - timedelta(days=days_ago)
+    base = datetime.now(UTC) - timedelta(days=days_ago)
     return [
         {"login": f"u{i}", "starred_at": base, "followers": followers, "public_repos": repos, "created_at": base}
         for i in range(n)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC
 from pathlib import Path
 
 import typer
@@ -44,9 +45,8 @@ def scan(
     ttl: int = typer.Option(6, "--ttl", help="Cache TTL in hours (default: 6)"),
 ) -> None:
     """Scan a single GitHub repository."""
-    from legitifier_pkg.cache import FetchCache
+    from legitifier_pkg.cache import FetchCache  # noqa: F401
     llm_client = client_from_env()
-    cache = FetchCache(ttl=ttl * 3600)
     silent = output == "json"
     pipeline = Pipeline(github_token=token or os.getenv("GITHUB_TOKEN"), llm_client=llm_client, silent=silent)
     if no_cache:
@@ -90,7 +90,15 @@ def search(
 ) -> None:
     """Search GitHub and scan matching repositories."""
     import time
-    from legitifier_pkg.search import build_query, load_presets, search_repos, trending_repos, starscout_repos, file_repos
+
+    from legitifier_pkg.search import (
+        build_query,
+        file_repos,
+        load_presets,
+        search_repos,
+        starscout_repos,
+        trending_repos,
+    )
 
     presets = load_presets()
 
@@ -221,7 +229,8 @@ def history(
     output: str = typer.Option("terminal", "--output", "-o", help="terminal | json"),
 ) -> None:
     """Show recent scan history."""
-    from datetime import datetime, timezone
+    from datetime import datetime
+
     from legitifier_pkg.feedback.store import FeedbackStore
     from legitifier_pkg.reports.terminal import trust_score
 
@@ -246,8 +255,8 @@ def history(
         "LIKELY_SCAM": "🚨", "SCAM": "💀", "UNKNOWN": "❓",
     }
 
-    from rich.table import Table
     from rich import box
+    from rich.table import Table
 
     table = Table(box=box.SIMPLE, show_header=True, header_style="bold cyan")
     table.add_column("Verdict", width=14)
@@ -255,7 +264,7 @@ def history(
     table.add_column("Repository")
     table.add_column("Scanned", width=14)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for scan in scans:
         v = scan["verdict"]
@@ -268,7 +277,7 @@ def history(
         try:
             scanned_at = datetime.fromisoformat(scan["scanned_at"])
             if scanned_at.tzinfo is None:
-                scanned_at = scanned_at.replace(tzinfo=timezone.utc)
+                scanned_at = scanned_at.replace(tzinfo=UTC)
             delta = now - scanned_at
             secs = int(delta.total_seconds())
             if secs < 60:

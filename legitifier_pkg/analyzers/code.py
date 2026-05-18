@@ -166,7 +166,7 @@ class CodeAnalyzer(BaseAnalyzer):
             "source_files": n_source,
             "ratio": round(ratio, 2),
             "empty_note": f" — empty test patterns: {', '.join(empty_matches[:2])}" if empty_matches else "",
-            "badge_note": f" — coverage badge claimed but no tests found" if false_coverage_claim else "",
+            "badge_note": " — coverage badge claimed but no tests found" if false_coverage_claim else "",
         }
         score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
         return HeuristicResult(

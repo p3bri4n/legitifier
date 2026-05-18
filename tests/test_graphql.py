@@ -1,21 +1,19 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from legitifier_pkg.fetchers.graphql import GraphQLStargazerFetcher
 
 
 def _make_edge(login: str, days_ago: int, followers: int = 5, repos: int = 10) -> dict:
     from datetime import timedelta
-    ts = (datetime.now(timezone.utc) - timedelta(days=days_ago)).isoformat()
+    ts = (datetime.now(UTC) - timedelta(days=days_ago)).isoformat()
     return {
         "starredAt": ts,
         "node": {
             "login": login,
             "followers": {"totalCount": followers},
             "repositories": {"totalCount": repos},
-            "createdAt": (datetime.now(timezone.utc) - timedelta(days=365)).isoformat(),
+            "createdAt": (datetime.now(UTC) - timedelta(days=365)).isoformat(),
         }
     }
 

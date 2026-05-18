@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import timedelta
+from datetime import UTC, timedelta
 from typing import Any
 
 from legitifier_pkg.analyzers.base import BaseAnalyzer, analyzer_for
@@ -130,10 +130,10 @@ class SocialAnalyzer(BaseAnalyzer):
 
         # Skip young repos — low fork ratio is normal early in a project's life
         if created_at:
-            from datetime import datetime, timezone
+            from datetime import datetime
             if created_at.tzinfo is None:
-                created_at = created_at.replace(tzinfo=timezone.utc)
-            age_days = (datetime.now(timezone.utc) - created_at).days
+                created_at = created_at.replace(tzinfo=UTC)
+            age_days = (datetime.now(UTC) - created_at).days
             if age_days < min_age_days:
                 return self._clean_result(config)
 
@@ -173,10 +173,10 @@ class SocialAnalyzer(BaseAnalyzer):
                 # Bought profile pattern: account old (>365 days) but completely empty
                 created_at = u.get("created_at")
                 if created_at:
-                    from datetime import datetime, timezone, timedelta
+                    from datetime import datetime
                     if created_at.tzinfo is None:
-                        created_at = created_at.replace(tzinfo=timezone.utc)
-                    age_days = (datetime.now(timezone.utc) - created_at).days
+                        created_at = created_at.replace(tzinfo=UTC)
+                    age_days = (datetime.now(UTC) - created_at).days
                     if age_days > 365:
                         bought_profile += 1
 

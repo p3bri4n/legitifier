@@ -246,7 +246,7 @@ def report(results: list[dict]) -> None:
         lines.append("\n## ⚠️ Heuristics with high false positive rate (>15%)\n")
         for h, fp, det in high_fp:
             lines.append(f"- **`{h}`** — FP rate: {fp:.0%}, Detection rate: {det:.0%}")
-            lines.append(f"  → Consider raising threshold or adding `min_stars` guard")
+            lines.append("  → Consider raising threshold or adding `min_stars` guard")
 
     md = "\n".join(lines)
     print("\n" + md)

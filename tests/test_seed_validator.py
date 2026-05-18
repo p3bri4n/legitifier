@@ -1,9 +1,7 @@
 import json
 from pathlib import Path
 
-import pytest
-
-from scripts.validate_seed import validate_file, validate_entry
+from scripts.validate_seed import validate_entry, validate_file
 
 
 def _write_seed(tmp_path: Path, entries: list[dict]) -> Path:

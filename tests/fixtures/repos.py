@@ -4,9 +4,9 @@ Each fixture returns a dict matching GitHubFetcher.fetch() output exactly.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-now = datetime.now(timezone.utc)
+now = datetime.now(UTC)
 
 
 def _stargazers(n: int, followers: int = 5, repos: int = 10,

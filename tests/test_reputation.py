@@ -4,7 +4,9 @@ from pathlib import Path
 import pytest
 
 from legitifier_pkg.data.loader import ReputationStore
-from legitifier_pkg.data.models import ReputationEntry, ReputationVerdict, ReputationConfidence
+from legitifier_pkg.data.models import (
+    ReputationVerdict,
+)
 from legitifier_pkg.fetchers.local_db import LocalDBFetcher
 
 

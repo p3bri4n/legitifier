@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from rich.console import Console
+
 import legitifier_pkg.analyzers.code  # noqa: F401 — registers analyzer
 import legitifier_pkg.analyzers.content  # noqa: F401
 import legitifier_pkg.analyzers.metadata  # noqa: F401
@@ -14,9 +16,8 @@ from legitifier_pkg.core.scorer import Scorer
 from legitifier_pkg.data.loader import ReputationStore
 from legitifier_pkg.feedback.store import FeedbackStore
 from legitifier_pkg.fetchers.github import GitHubFetcher
-from legitifier_pkg.fetchers.local_db import LocalDBFetcher
 from legitifier_pkg.fetchers.llm import LLMClient, LLMFetcher
-from rich.console import Console
+from legitifier_pkg.fetchers.local_db import LocalDBFetcher
 
 console = Console()
 
@@ -110,7 +111,7 @@ class Pipeline:
 
 
 class _NullContext:
-    def __enter__(self) -> "_NullContext":
+    def __enter__(self) -> _NullContext:
         return self
 
     def __exit__(self, *_: object) -> None:

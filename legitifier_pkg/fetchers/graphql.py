@@ -134,7 +134,7 @@ class GraphQLStargazerFetcher:
 
     @staticmethod
     def _parse_edge(edge: dict) -> dict[str, Any]:
-        from datetime import datetime, timezone
+        from datetime import datetime
         node = edge.get("node", {})
         starred_raw = edge.get("starredAt")
         starred_at = None

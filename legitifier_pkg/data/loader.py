@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from legitifier_pkg.data.models import (
     ReputationConfidence,
     ReputationEntry,
     ReputationVerdict,
 )
+
 
 def _find_seed() -> Path:
     """Find seed.jsonl — works both from source tree and installed package."""

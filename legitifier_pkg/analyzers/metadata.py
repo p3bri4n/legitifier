@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from legitifier_pkg.analyzers.base import BaseAnalyzer, analyzer_for
@@ -95,8 +95,8 @@ class MetadataAnalyzer(BaseAnalyzer):
         pushed_at: datetime | None = data.get("pushed_at")
         if pushed_at:
             if pushed_at.tzinfo is None:
-                pushed_at = pushed_at.replace(tzinfo=timezone.utc)
-            if (datetime.now(timezone.utc) - pushed_at).days < 30:
+                pushed_at = pushed_at.replace(tzinfo=UTC)
+            if (datetime.now(UTC) - pushed_at).days < 30:
                 return self._clean_result(config)
 
         triggered = stars >= min_stars and open_issues == 0 and commit_count == 0

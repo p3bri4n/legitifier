@@ -5,6 +5,7 @@ import json
 import os
 import platform
 import sqlite3
+from datetime import UTC
 from pathlib import Path
 
 from legitifier_pkg.core.models import ScanReport, Verdict
@@ -183,7 +184,7 @@ class FeedbackStore:
         """
         params: list = []
         if verdict_filter:
-            query = f"""
+            query = """
                 SELECT id, repo_url, scanned_at, final_score, verdict
                 FROM scans
                 WHERE id IN (
@@ -202,7 +203,7 @@ class FeedbackStore:
             for r in rows
         ]
 
-    def get_recent_scan(self, repo_url: str, max_age_seconds: int) -> "ScanReport | None":
+    def get_recent_scan(self, repo_url: str, max_age_seconds: int) -> ScanReport | None:
         """Return the most recent scan for a repo if within max_age_seconds, else None."""
         import json
         import time
@@ -217,11 +218,11 @@ class FeedbackStore:
             return None
         report_json, scanned_at_str = row
         # Parse scanned_at and compare
-        from datetime import datetime, timezone
+        from datetime import datetime
         try:
             scanned_at = datetime.fromisoformat(scanned_at_str)
             if scanned_at.tzinfo is None:
-                scanned_at = scanned_at.replace(tzinfo=timezone.utc)
+                scanned_at = scanned_at.replace(tzinfo=UTC)
             if scanned_at.timestamp() < cutoff:
                 return None
         except Exception:
@@ -236,8 +237,8 @@ class FeedbackStore:
         return row[0] if row else 0
 
     def set_search_offset(self, query: str, offset: int) -> None:
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc).isoformat()
+        from datetime import datetime
+        now = datetime.now(UTC).isoformat()
         with self._connect() as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO search_offsets (query, offset, updated_at) VALUES (?, ?, ?)",

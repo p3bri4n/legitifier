@@ -152,7 +152,7 @@ def validate_append_only(path: Path, base_branch: str = "main") -> Errors:
             key = entry.get("slug") or entry.get("login")
             errors.append(f"Append-only violation: entry '{key}' was removed or modified.")
         except json.JSONDecodeError:
-            errors.append(f"Append-only violation: a line was removed or modified.")
+            errors.append("Append-only violation: a line was removed or modified.")
 
     return errors
 
