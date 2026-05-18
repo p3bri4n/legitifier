@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "legitifier"
-version = "0.1.0"
+version = "2026.0518.1223"
 description = "Evaluate the credibility of GitHub repositories"
 authors = [{name = "p3bri4n", url = "https://github.com/p3bri4n"}]
 requires-python = ">=3.11"
