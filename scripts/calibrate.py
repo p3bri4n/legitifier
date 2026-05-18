@@ -26,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
+from legitifier_pkg import __version__
 from legitifier_pkg.feedback.store import FeedbackStore
 from legitifier_pkg.fetchers.llm import client_from_env
 from legitifier_pkg.pipeline import Pipeline
@@ -76,7 +77,7 @@ def _make_pipeline(token: str | None) -> Pipeline:
 
 
 def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore) -> dict | None:
-    existing = store.get_recent_scan(url, max_age_seconds=6 * 3600)
+    existing = store.get_recent_scan(url, max_age_seconds=6 * 3600, current_version=__version__)
     if existing:
         triggered = [r.heuristic_id for r in existing.results if r.triggered]
         trust = round(100 - existing.final_score, 1)

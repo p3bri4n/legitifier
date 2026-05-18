@@ -203,10 +203,24 @@ class FeedbackStore:
             for r in rows
         ]
 
-    def get_recent_scan(self, repo_url: str, max_age_seconds: int) -> ScanReport | None:
-        """Return the most recent scan for a repo if within max_age_seconds, else None."""
+    def get_recent_scan(
+        self,
+        repo_url: str,
+        max_age_seconds: int,
+        current_version: str | None = None,
+        repo_pushed_at: "datetime | None" = None,
+    ) -> "ScanReport | None":
+        """
+        Return the most recent scan for a repo if still valid, else None.
+
+        A scan is considered stale if any of these are true:
+        - older than max_age_seconds (TTL)
+        - scanned with an older version of legitifier than current_version
+        - the repo has been pushed since the scan (repo_pushed_at > scanned_at)
+        """
         import json
         import time
+
         cutoff = time.time() - max_age_seconds
         with self._connect() as conn:
             row = conn.execute(
@@ -216,18 +230,36 @@ class FeedbackStore:
             ).fetchone()
         if not row:
             return None
+
         report_json, scanned_at_str = row
-        # Parse scanned_at and compare
-        from datetime import datetime
+        from datetime import UTC, datetime
         try:
             scanned_at = datetime.fromisoformat(scanned_at_str)
             if scanned_at.tzinfo is None:
                 scanned_at = scanned_at.replace(tzinfo=UTC)
-            if scanned_at.timestamp() < cutoff:
-                return None
         except Exception:
             return None
-        return ScanReport.model_validate(json.loads(report_json))
+
+        # TTL check
+        if scanned_at.timestamp() < cutoff:
+            return None
+
+        report = ScanReport.model_validate(json.loads(report_json))
+
+        # Version check — rescan if legitifier has been updated since this scan
+        if current_version and current_version not in ("unknown", "dev"):
+            scan_ver = report.scanner_version
+            if scan_ver not in ("unknown", "dev") and scan_ver < current_version:
+                return None
+
+        # Repo activity check — rescan if repo has been pushed since last scan
+        if repo_pushed_at:
+            if repo_pushed_at.tzinfo is None:
+                repo_pushed_at = repo_pushed_at.replace(tzinfo=UTC)
+            if repo_pushed_at > scanned_at:
+                return None
+
+        return report
 
     def get_search_offset(self, query: str) -> int:
         with self._connect() as conn:

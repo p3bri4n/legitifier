@@ -180,8 +180,11 @@ def search(
         if no_cache:
             pipeline._github._cache.delete(repo_url)
 
-        if not no_cache and not rescan and store.get_recent_scan(repo_url, max_age_seconds=3600):
-            continue
+        # Skip repos already scanned with current version and same repo state
+        if not no_cache and not rescan:
+            from legitifier_pkg import __version__
+            if store.get_recent_scan(repo_url, max_age_seconds=3600, current_version=__version__):
+                continue
 
         try:
             report, _ = pipeline.run(repo_url)
