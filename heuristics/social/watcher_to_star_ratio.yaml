@@ -14,7 +14,8 @@ inputs:
 
 thresholds:
   min_stars_to_trigger: 500
-  max_ratio: 0.003   # below this = suspicious (10x lower than organic baseline)
+  max_ratio: 0.002   # raised from 0.003 — GitHub watcher counts unreliable on large repos
+  max_stars_exempt: 10000  # repos >10k stars exempt — watcher count unreliable at scale
 
 scoring:
   method: step

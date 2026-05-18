@@ -14,7 +14,8 @@ thresholds:
   min_prs_in_burst: 5
   max_author_followers: 1
   max_author_repos: 3
-  min_dead_pr_ratio: 0.85  # raised from 0.7 — active projects have open PRs
+  min_dead_pr_ratio: 0.85
+  min_suspicious_authors_absolute: 3  # at least 3 suspicious authors, not just a ratio
 
 scoring:
   method: step

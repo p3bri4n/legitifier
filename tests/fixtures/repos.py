@@ -97,10 +97,10 @@ def bought_stars_repo() -> dict:
     """
     return {
         "slug": "startup/hot-ai-tool",
-        "stars": 15000,
-        "forks": 180,        # ratio 0.012 — well below 0.05 threshold
+        "stars": 8000,
+        "forks": 90,         # ratio 0.011 — well below 0.03 threshold
         "open_issues": 3,
-        "watchers": 20,      # ratio 0.001 — below 0.003 threshold
+        "watchers": 10,      # ratio 0.00125 — below 0.002 threshold, under 10k stars
         "created_at": now - timedelta(days=500),  # old enough for fork_ratio
         "pushed_at": now - timedelta(days=5),
         "owner_created_at": now - timedelta(days=350),

@@ -82,7 +82,8 @@ class SocialAnalyzer(BaseAnalyzer):
         min_burst = t.get("min_prs_in_burst", 5)
         max_followers = t.get("max_author_followers", 1)
         max_repos = t.get("max_author_repos", 3)
-        min_dead_ratio = t.get("min_dead_pr_ratio", 0.7)
+        min_dead_ratio = t.get("min_dead_pr_ratio", 0.85)
+        min_suspicious_abs = t.get("min_suspicious_authors_absolute", 3)
 
         # Burst detection
         burst_count, _ = self._max_window_count(
@@ -102,7 +103,12 @@ class SocialAnalyzer(BaseAnalyzer):
         )
         suspicious_ratio = suspicious / len(prs)
 
-        triggered = burst_count >= min_burst and dead_ratio >= min_dead_ratio
+        # Require both high ratio AND minimum absolute count to avoid FP on active repos
+        triggered = (
+            burst_count >= min_burst
+            and dead_ratio >= min_dead_ratio
+            and suspicious >= min_suspicious_abs
+        )
         context = {
             "burst_count": burst_count,
             "burst_days": burst_window,
@@ -262,9 +268,14 @@ class SocialAnalyzer(BaseAnalyzer):
         watchers = data.get("watchers", 0)
         t = config.thresholds
         min_stars = t.get("min_stars_to_trigger", 500)
-        max_ratio = t.get("max_ratio", 0.003)
+        max_ratio = t.get("max_ratio", 0.002)
+        max_stars_exempt = t.get("max_stars_exempt", 10000)
 
         if stars < min_stars:
+            return self._clean_result(config)
+
+        # Very large repos — GitHub watcher counts become unreliable
+        if stars > max_stars_exempt:
             return self._clean_result(config)
 
         ratio = round(watchers / stars, 4) if stars > 0 else 1.0

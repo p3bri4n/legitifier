@@ -130,6 +130,8 @@ class CodeAnalyzer(BaseAnalyzer):
         readme: str = (data.get("readme") or "").lower()
         t = config.thresholds
 
+        min_source_files = t.get("min_source_files", 3)
+
         # Classify files
         test_files = [s for s in snippets
                       if any(s["path"].startswith(p) or f"/{p}" in s["path"]
@@ -150,10 +152,10 @@ class CodeAnalyzer(BaseAnalyzer):
         all_test_content = "\n".join(s["content"] for s in test_files)
         empty_matches = [p for p in empty_patterns if p in all_test_content]
 
-        # Check for false coverage claims in README
+        # Check for false coverage claims — only meaningful if we have source files
         badge_patterns: list[str] = t.get("coverage_badge_patterns", [])
         badge_matches = [p for p in badge_patterns if p in readme]
-        false_coverage_claim = bool(badge_matches) and n_tests == 0
+        false_coverage_claim = bool(badge_matches) and n_tests == 0 and n_source >= min_source_files
 
         triggered = (
             (n_source > 3 and ratio < min_ratio)  # source files but almost no tests

@@ -222,8 +222,10 @@ class TestCoverageSignals:
             {"path": "utils.py", "content": "def helper(): pass"},
             {"path": "core.py", "content": "def process(): pass"},
             {"path": "app.py", "content": "def start(): pass"},
+            # no test files — badge claims 100% but no tests found
         ]
         report = _scan(data, store)
+        # Should trigger: source files found, badge claimed, no tests
         assert "test_coverage_signals" in _triggered_ids(report)
 
     def test_not_triggered_on_legit_with_tests(self, store):
