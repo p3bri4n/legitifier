@@ -15,8 +15,16 @@ presets:
     query: "topic:llm stars:>500 created:>2024-06-01"
 
   wormgpt-variants:
-    description: "WormGPT / DarkGPT clone pattern"
-    query: "topic:worm-gpt OR topic:darkgpt OR topic:fraudgpt stars:>10"
+    description: "WormGPT / DarkGPT clone pattern — run multiple times for each variant"
+    query: "topic:worm-gpt stars:>5"
+
+  darkgpt-variants:
+    description: "DarkGPT clone pattern"
+    query: "topic:darkgpt stars:>5"
+
+  fraudgpt-variants:
+    description: "FraudGPT clone pattern"
+    query: "topic:fraudgpt stars:>5"
 
   api-wrapper:
     description: "Repos claiming to be local AI but likely just API wrappers"
