@@ -63,6 +63,7 @@ class Scorer:
             final_score = _WHITELIST_MAX_SCORE
             errors = [*errors, "Score capped: owner/repo is whitelisted (CLEAN in reputation store)."]
 
+        from legitifier_pkg import __version__
         return ScanReport(
             repo_url=repo_url,
             final_score=final_score,
@@ -70,6 +71,7 @@ class Scorer:
             results=results,
             errors=errors,
             scan_duration_seconds=duration,
+            scanner_version=__version__,
         )
 
     @staticmethod

@@ -67,6 +67,7 @@ class ScanReport(BaseModel):
     scanned_at: datetime = Field(default_factory=datetime.utcnow)
     errors: list[str] = Field(default_factory=list)
     scan_duration_seconds: float = 0.0
+    scanner_version: str = "unknown"
 
     @classmethod
     def verdict_from_score(cls, score: float) -> Verdict:

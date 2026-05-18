@@ -52,7 +52,7 @@ def render(report: ScanReport) -> None:
 
     console.print(Panel(
         f"{icon} [bold {color}]{report.verdict.value}[/] — Trust: [bold]{trust:.0f}/100[/]  "
-        f"[dim]({len(triggered)}/{total} signals • {duration})[/]\n"
+        f"[dim]({len(triggered)}/{total} signals • {duration} • v{report.scanner_version})[/]\n"
         f"[dim]{report.repo_url}[/]",
         title="[bold]legitifier[/]",
         border_style=color,

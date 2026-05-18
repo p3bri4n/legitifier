@@ -27,6 +27,9 @@ legitifier = "cli.main:app"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning:pydantic",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["legitifier_pkg", "cli", "heuristics", "prompts", "data"]
