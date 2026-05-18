@@ -5,7 +5,7 @@ import json
 import os
 import platform
 import sqlite3
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 from legitifier_pkg.core.models import ScanReport, Verdict
@@ -40,7 +40,7 @@ class FeedbackStore:
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     repo_url    TEXT NOT NULL,
                     scanned_at  TEXT NOT NULL,
-                    final_score REAL NOT NULL,
+                    risk_score REAL NOT NULL,
                     verdict     TEXT NOT NULL,
                     report_json TEXT NOT NULL
                 )
@@ -80,11 +80,11 @@ class FeedbackStore:
     def save_scan(self, report: ScanReport) -> int:
         with self._connect() as conn:
             cur = conn.execute(
-                "INSERT INTO scans (repo_url, scanned_at, final_score, verdict, report_json) VALUES (?,?,?,?,?)",
+                "INSERT INTO scans (repo_url, scanned_at, risk_score, verdict, report_json) VALUES (?,?,?,?,?)",
                 (
                     report.repo_url,
                     report.scanned_at.isoformat(),
-                    report.final_score,
+                    report.risk_score,
                     report.verdict.value,
                     report.model_dump_json(),
                 ),
@@ -176,7 +176,7 @@ class FeedbackStore:
     ) -> list[dict]:
         """Return most recent scan per repo, optionally filtered by verdict."""
         query = """
-            SELECT id, repo_url, scanned_at, final_score, verdict
+            SELECT id, repo_url, scanned_at, risk_score, verdict
             FROM scans
             WHERE id IN (
                 SELECT MAX(id) FROM scans GROUP BY repo_url
@@ -185,7 +185,7 @@ class FeedbackStore:
         params: list = []
         if verdict_filter:
             query = """
-                SELECT id, repo_url, scanned_at, final_score, verdict
+                SELECT id, repo_url, scanned_at, risk_score, verdict
                 FROM scans
                 WHERE id IN (
                     SELECT MAX(id) FROM scans GROUP BY repo_url
@@ -199,7 +199,7 @@ class FeedbackStore:
             rows = conn.execute(query, params).fetchall()
         return [
             {"id": r[0], "repo_url": r[1], "scanned_at": r[2],
-             "final_score": r[3], "verdict": r[4]}
+             "risk_score": r[3], "verdict": r[4]}
             for r in rows
         ]
 
@@ -208,8 +208,8 @@ class FeedbackStore:
         repo_url: str,
         max_age_seconds: int,
         current_version: str | None = None,
-        repo_pushed_at: "datetime | None" = None,
-    ) -> "ScanReport | None":
+        repo_pushed_at: datetime | None = None,
+    ) -> ScanReport | None:
         """
         Return the most recent scan for a repo if still valid, else None.
 
@@ -280,3 +280,54 @@ class FeedbackStore:
     def reset_search_offset(self, query: str) -> None:
         with self._connect() as conn:
             conn.execute("DELETE FROM search_offsets WHERE query = ?", (query,))
+
+    def record_contributor_reputation(
+        self,
+        report: ScanReport,
+        min_risk_score: float = 50.0,
+    ) -> int:
+        """
+        After a SCAM/LIKELY_SCAM scan, extract PR authors and stargazers
+        with suspicious profiles and record them in the local reputation DB.
+        Returns count of new entries added.
+        """
+        if report.risk_score < min_risk_score:
+            return 0
+
+        verdict = "SUSPICIOUS" if report.risk_score < 75 else "SCAM"
+        now_date = datetime.now(UTC).date().isoformat()  # date only, no time
+        added = 0
+
+        logins: set[str] = set()
+
+        for result in report.results:
+            if result.heuristic_id == "contributor_reputation":
+                flagged = result.raw_data.get("flagged_logins", [])
+                for item in flagged:
+                    if isinstance(item, dict):
+                        logins.add(item.get("login", ""))
+                    elif isinstance(item, str):
+                        logins.add(item)
+
+        owner = report.repo_url.split("github.com/")[-1].split("/")[0]
+        if owner and report.risk_score >= 75:
+            logins.add(owner)
+
+        with self._connect() as conn:
+            for login in logins:
+                if not login:
+                    continue
+                existing = conn.execute(
+                    "SELECT id FROM reputation WHERE login = ? AND type = 'contributor'",
+                    (login,),
+                ).fetchone()
+                if not existing:
+                    conn.execute(
+                        "INSERT INTO reputation (type, login, slug, verdict, confidence, source, note, added) "
+                        "VALUES (?,?,?,?,?,?,?,?)",
+                        ("contributor", login, None, verdict, "probable",
+                         "auto", f"Contributor to {report.repo_url}", now_date),
+                    )
+                    added += 1
+
+        return added

@@ -98,7 +98,7 @@ legitifier search --source starscout --limit 50
 legitifier search --source file --input repos.txt --limit 100
 ```
 
-Available presets: `scam-hunter`, `vibe-coding`, `fresh-suspect`, `wormgpt-variants`, `api-wrapper`, `educational`.
+Available presets: `scam-hunter`, `vibe-coding`, `fresh-suspect`, `wormgpt-variants`, `darkgpt-variants`, `fraudgpt-variants`, `api-wrapper`, `educational`, `educational-cs`.
 
 Each source remembers its position — re-running the same command continues where it left off.
 Use `--reset` to start over, `--rescan` to re-scan already-seen repos.
@@ -167,6 +167,7 @@ legitifier ships with a seed database (`data/seed.jsonl`) of known scam actors a
 - **Whitelist** — owners or repos marked `CLEAN` have their score capped at `SUSPICIOUS` (49/100), preventing false positives on known legitimate projects. The seed includes major AI organizations (HuggingFace, Meta Research, Google DeepMind, Microsoft, OpenAI, Anthropic, Mistral AI, ggerganov).
 - **Blacklist** — owners or repos marked `SCAM` or `SUSPICIOUS` contribute directly to the final score, weighted by confidence level (`certain` → 1.0, `probable` → 0.6, `unsure` → 0.3).
 - **Local enrichment** — every time you use `--feedback`, your verdict is stored in `~/.legitifier/scans.db` and factored into future scans of repos from the same owner or contributor.
+- **Contributor propagation** — after each LIKELY_SCAM or SCAM scan, PR authors flagged as suspicious are automatically recorded in the local reputation DB. Future scans of repos where these contributors appear are penalized accordingly.
 
 ### Contributing to the seed
 

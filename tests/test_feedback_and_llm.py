@@ -23,7 +23,7 @@ def store(tmp_path):
 
 @pytest.fixture
 def sample_report():
-    return ScanReport(repo_url="https://github.com/x/y", final_score=80.0,
+    return ScanReport(repo_url="https://github.com/x/y", risk_score=80.0,
                       verdict=Verdict.SCAM, results=[])
 
 

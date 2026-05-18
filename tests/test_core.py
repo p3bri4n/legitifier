@@ -52,23 +52,23 @@ class TestScorer:
     def test_empty_results(self):
         scorer = Scorer()
         report = scorer.aggregate("https://github.com/x/y", [], [])
-        assert report.final_score == 0.0
+        assert report.risk_score == 0.0
 
     def test_whitelist_caps_score(self):
         scorer = Scorer()
         report = scorer.aggregate("url", [self._result(90, "critical")], [], whitelisted=True)
-        assert report.final_score == 49.0
+        assert report.risk_score == 49.0
         assert report.verdict == Verdict.SUSPICIOUS
         assert any("whitelisted" in e for e in report.errors)
 
     def test_whitelist_no_effect_on_low_score(self):
         scorer = Scorer()
         report = scorer.aggregate("url", [self._result(10)], [], whitelisted=True)
-        assert report.final_score < 49.0
+        assert report.risk_score < 49.0
         assert report.verdict == Verdict.CLEAN
         scorer = Scorer()
         # critical result should weigh more than low
         r_critical = self._result(50, "critical")
         r_low = self._result(0, "low")
         report = scorer.aggregate("url", [r_critical, r_low], [])
-        assert report.final_score > 25  # pulled toward 50 by critical weight
+        assert report.risk_score > 25  # pulled toward 50 by critical weight

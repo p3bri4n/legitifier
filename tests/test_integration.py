@@ -103,7 +103,7 @@ class TestPipeline:
     def test_legit_repo_scores_low(self, store):
         pipeline = _make_pipeline(_legit_data(), store)
         report, scan_id = pipeline.run("github.com/owner/legit-repo")
-        assert report.final_score < 50
+        assert report.risk_score < 50
         assert report.verdict in (Verdict.CLEAN, Verdict.SUSPICIOUS)
         assert isinstance(scan_id, int)
 
@@ -115,7 +115,7 @@ class TestPipeline:
         pipeline_scam = _make_pipeline(_scam_data(), store)
         report_scam, _ = pipeline_scam.run("github.com/fake/wormgpt-ultra")
 
-        assert report_scam.final_score > report_legit.final_score
+        assert report_scam.risk_score > report_legit.risk_score
         # At least 3 critical/high heuristics triggered
         triggered = [r for r in report_scam.results if r.triggered]
         assert len(triggered) >= 3
@@ -172,7 +172,7 @@ class TestExport:
 
     def test_export_with_feedback(self, store, tmp_path):
         from legitifier_pkg.core.models import ScanReport
-        report = ScanReport(repo_url="https://github.com/x/y", final_score=80.0, verdict=Verdict.SCAM, results=[])
+        report = ScanReport(repo_url="https://github.com/x/y", risk_score=80.0, verdict=Verdict.SCAM, results=[])
         scan_id = store.save_scan(report)
         store.save_feedback(scan_id, Verdict.SCAM, Confidence.CERTAIN, "obvious fake")
 
@@ -190,7 +190,7 @@ class TestExport:
     def test_export_multiple_records(self, store, tmp_path):
         from legitifier_pkg.core.models import ScanReport
         for i in range(3):
-            report = ScanReport(repo_url=f"https://github.com/x/repo{i}", final_score=60.0, verdict=Verdict.LIKELY_SCAM, results=[])
+            report = ScanReport(repo_url=f"https://github.com/x/repo{i}", risk_score=60.0, verdict=Verdict.LIKELY_SCAM, results=[])
             scan_id = store.save_scan(report)
             store.save_feedback(scan_id, Verdict.LIKELY_SCAM)
 

@@ -61,7 +61,7 @@ class HeuristicResult(BaseModel):
 
 class ScanReport(BaseModel):
     repo_url: str
-    final_score: float = Field(ge=0.0, le=100.0)
+    risk_score: float = Field(ge=0.0, le=100.0)
     verdict: Verdict
     results: list[HeuristicResult]
     scanned_at: datetime = Field(default_factory=datetime.utcnow)

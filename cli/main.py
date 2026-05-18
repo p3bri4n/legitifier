@@ -61,7 +61,7 @@ def scan(
     if feedback:
         _collect_feedback(scan_id, report.verdict)
 
-    raise typer.Exit(code=0 if report.final_score < 50 else 1)
+    raise typer.Exit(code=0 if report.risk_score < 50 else 1)
 
 
 @app.command()
@@ -191,7 +191,7 @@ def search(
             verdict = report.verdict
             color = _VERDICT_COLOR[verdict]
             icon = _VERDICT_ICON[verdict]
-            trust = trust_score(report.final_score)
+            trust = trust_score(report.risk_score)
             triggered = len([r for r in report.results if r.triggered])
             console.print(
                 f"[{color}]{icon} {verdict.value:12}[/] "
@@ -273,7 +273,7 @@ def history(
         v = scan["verdict"]
         color = _COLORS.get(v, "white")
         icon = _ICONS.get(v, "?")
-        trust = f"{trust_score(scan['final_score']):.0f}"
+        trust = f"{trust_score(scan['risk_score']):.0f}"
         slug = scan["repo_url"].replace("https://", "").replace("github.com/", "")
 
         # Human-readable relative time

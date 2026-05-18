@@ -69,7 +69,7 @@ class Pipeline:
                 elapsed = round(time.monotonic() - started_at, 1)
                 report = ScanReport(
                     repo_url=repo_url,
-                    final_score=0.0,
+                    risk_score=0.0,
                     verdict=Verdict.UNKNOWN,
                     results=[],
                     errors=errors,
@@ -107,6 +107,8 @@ class Pipeline:
         whitelisted = data.get("owner_reputation", {}).get("verdict") == "CLEAN"
         report = self._scorer.aggregate(repo_url, results, errors, whitelisted=whitelisted, duration=elapsed)
         scan_id = self._store.save_scan(report)
+        # Propagate reputation from scam contributors
+        self._store.record_contributor_reputation(report)
         return report, scan_id
 
 

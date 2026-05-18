@@ -59,7 +59,7 @@ class TestLegitRepos:
     def test_legit_scores_lower_than_scam(self, store):
         legit = _scan(legit_popular_repo(), store)
         scam = _scan(bought_stars_repo(), store)
-        assert legit.final_score < scam.final_score
+        assert legit.risk_score < scam.risk_score
 
 
 # ── Scam patterns must trigger relevant heuristics ────────────────────────────
@@ -138,17 +138,17 @@ class TestScoreOrdering:
     def test_wormgpt_scores_higher_than_legit(self, store):
         legit = _scan(legit_popular_repo(), store)
         worm = _scan(wormgpt_pattern_repo(), store)
-        assert worm.final_score > legit.final_score
+        assert worm.risk_score > legit.risk_score
 
     def test_api_wrapper_scores_higher_than_legit(self, store):
         legit = _scan(legit_popular_repo(), store)
         wrapper = _scan(api_wrapper_repo(), store)
-        assert wrapper.final_score > legit.final_score
+        assert wrapper.risk_score > legit.risk_score
 
     def test_bought_stars_scores_higher_than_legit(self, store):
         legit = _scan(legit_popular_repo(), store)
         bought = _scan(bought_stars_repo(), store)
-        assert bought.final_score > legit.final_score
+        assert bought.risk_score > legit.risk_score
 
 
 class TestWormGPTTelegramFunnel:

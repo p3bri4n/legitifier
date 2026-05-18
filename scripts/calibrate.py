@@ -80,7 +80,7 @@ def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore)
     existing = store.get_recent_scan(url, max_age_seconds=6 * 3600, current_version=__version__)
     if existing:
         triggered = [r.heuristic_id for r in existing.results if r.triggered]
-        trust = round(100 - existing.final_score, 1)
+        trust = round(100 - existing.risk_score, 1)
         print(
             f"  {'✅' if existing.verdict.value == 'CLEAN' else '🚩'} "
             f"{existing.verdict.value:12} Trust {trust:3.0f}  "
@@ -90,7 +90,7 @@ def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore)
         return {
             "url": url, "category": category, "cached": True,
             "verdict": existing.verdict.value,
-            "final_score": existing.final_score, "trust": trust,
+            "risk_score": existing.risk_score, "trust": trust,
             "triggered": triggered,
             "scores": {r.heuristic_id: r.score for r in existing.results},
         }
@@ -100,15 +100,15 @@ def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore)
         triggered = [r.heuristic_id for r in report.results if r.triggered]
         print(
             f"  {'✅' if report.verdict.value == 'CLEAN' else '🚩'} "
-            f"{report.verdict.value:12} Trust {100 - report.final_score:3.0f}  "
+            f"{report.verdict.value:12} Trust {100 - report.risk_score:3.0f}  "
             f"{url.split('github.com/')[-1]}"
             + (f"  [{', '.join(triggered)}]" if triggered else "")
         )
         return {
             "url": url, "category": category, "cached": False,
             "verdict": report.verdict.value,
-            "final_score": report.final_score,
-            "trust": round(100 - report.final_score, 1),
+            "risk_score": report.risk_score,
+            "trust": round(100 - report.risk_score, 1),
             "triggered": triggered,
             "scores": {r.heuristic_id: r.score for r in report.results},
         }

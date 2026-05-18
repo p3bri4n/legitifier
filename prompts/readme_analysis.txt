@@ -34,3 +34,5 @@ Stars: {{ stars }}
 Topics: {{ topics }}
 README:
 {{ readme }}
+
+IMPORTANT: Reply with ONLY the JSON object. No explanation, no markdown, no prose. Start your response with { and end with }.

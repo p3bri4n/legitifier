@@ -71,10 +71,11 @@ class TestScanVersionInvalidation:
 
     def _save_scan(self, store, version="1.0.0", pushed_at=None):
         from unittest.mock import MagicMock
+
         from legitifier_pkg.core.models import ScanReport, Verdict
         report = MagicMock(spec=ScanReport)
         report.repo_url = "github.com/owner/repo"
-        report.final_score = 0.0
+        report.risk_score = 0.0
         report.verdict = Verdict.CLEAN
         report.results = []
         report.errors = []
@@ -83,7 +84,7 @@ class TestScanVersionInvalidation:
         report.scanned_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
         report.model_dump_json = lambda **_: __import__("json").dumps({
             "repo_url": report.repo_url,
-            "final_score": 0.0,
+            "risk_score": 0.0,
             "verdict": "CLEAN",
             "results": [],
             "errors": [],
@@ -110,10 +111,10 @@ class TestScanVersionInvalidation:
         assert result is None
 
     def test_invalidates_if_repo_pushed_after_scan(self, tmp_path):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         store = self._make_store(tmp_path)
         self._save_scan(store, version="1.0.0")
-        future_push = datetime.now(timezone.utc) + timedelta(hours=1)
+        future_push = datetime.now(UTC) + timedelta(hours=1)
         result = store.get_recent_scan(
             "github.com/owner/repo", max_age_seconds=3600,
             repo_pushed_at=future_push
@@ -121,10 +122,10 @@ class TestScanVersionInvalidation:
         assert result is None
 
     def test_valid_if_repo_pushed_before_scan(self, tmp_path):
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta
         store = self._make_store(tmp_path)
         self._save_scan(store, version="1.0.0")
-        old_push = datetime.now(timezone.utc) - timedelta(days=30)
+        old_push = datetime.now(UTC) - timedelta(days=30)
         result = store.get_recent_scan(
             "github.com/owner/repo", max_age_seconds=3600,
             repo_pushed_at=old_push

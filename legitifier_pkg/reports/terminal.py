@@ -26,8 +26,8 @@ _VERDICT_ICON = {
 console = Console()
 
 
-def trust_score(final_score: float) -> float:
-    return round(100.0 - final_score, 1)
+def trust_score(risk_score: float) -> float:
+    return round(100.0 - risk_score, 1)
 
 
 def render(report: ScanReport) -> None:
@@ -46,7 +46,7 @@ def render(report: ScanReport) -> None:
             console.print(f"[yellow]Error:[/] {report.errors[0]}")
         return
 
-    trust = trust_score(report.final_score)
+    trust = trust_score(report.risk_score)
     triggered = [r for r in report.results if r.triggered]
     total = len(report.results)
 

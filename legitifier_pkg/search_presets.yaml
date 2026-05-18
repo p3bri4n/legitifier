@@ -31,5 +31,9 @@ presets:
     query: "topic:local-llm stars:>100 forks:<15 language:python"
 
   educational:
-    description: "Honest educational repos — simulators, tutorials, learning projects"
-    query: "topic:educational stars:>50 topic:python OR topic:tutorial stars:>50 topic:computer-science"
+    description: "Educational Python repos with tutorial topic"
+    query: "topic:tutorial stars:>50 language:python"
+
+  educational-cs:
+    description: "Computer science educational repos"
+    query: "topic:computer-science stars:>100 language:python"

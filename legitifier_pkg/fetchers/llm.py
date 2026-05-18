@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -91,11 +90,29 @@ class LLMFetcher:
 
     @staticmethod
     def _parse(raw: str) -> dict[str, Any]:
+        import re as _re
+        # Remove markdown code fences
+        cleaned = _re.sub(r"```json|```", "", raw).strip()
+        # Try direct parse first
         try:
-            cleaned = re.sub(r"```json|```", "", raw).strip()
             return json.loads(cleaned)
         except (json.JSONDecodeError, ValueError):
-            return {}
+            pass
+        # Extract first {...} block from prose response
+        match = _re.search(r'\{[^{}]*\}', cleaned, _re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except (json.JSONDecodeError, ValueError):
+                pass
+        # Try extracting largest {...} block
+        matches = _re.findall(r'\{.*?\}', cleaned, _re.DOTALL)
+        for m in sorted(matches, key=len, reverse=True):
+            try:
+                return json.loads(m)
+            except (json.JSONDecodeError, ValueError):
+                continue
+        return {}
 
 
 def client_from_env() -> LLMClient | None:

@@ -36,12 +36,12 @@ class Scorer:
         duration: float = 0.0,
     ) -> ScanReport:
         if not results:
-            final_score = 0.0
+            risk_score = 0.0
         else:
             triggered = [r for r in results if r.triggered]
 
             if not triggered:
-                final_score = 0.0
+                risk_score = 0.0
             else:
                 # Weighted average of triggered scores only
                 total_weight = sum(self._weight(r) for r in triggered)
@@ -55,19 +55,19 @@ class Scorer:
                 coverage = len(triggered) / len(results)
                 coverage_factor = 0.5 + (coverage * 0.5)  # range [0.5, 1.0]
 
-                final_score = min((weighted_avg + boost) * coverage_factor, 100.0)
+                risk_score = min((weighted_avg + boost) * coverage_factor, 100.0)
 
-        final_score = round(final_score, 2)
+        risk_score = round(risk_score, 2)
 
-        if whitelisted and final_score > _WHITELIST_MAX_SCORE:
-            final_score = _WHITELIST_MAX_SCORE
+        if whitelisted and risk_score > _WHITELIST_MAX_SCORE:
+            risk_score = _WHITELIST_MAX_SCORE
             errors = [*errors, "Score capped: owner/repo is whitelisted (CLEAN in reputation store)."]
 
         from legitifier_pkg import __version__
         return ScanReport(
             repo_url=repo_url,
-            final_score=final_score,
-            verdict=ScanReport.verdict_from_score(final_score),
+            risk_score=risk_score,
+            verdict=ScanReport.verdict_from_score(risk_score),
             results=results,
             errors=errors,
             scan_duration_seconds=duration,
