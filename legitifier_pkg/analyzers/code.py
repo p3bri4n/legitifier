@@ -1,9 +1,54 @@
 from __future__ import annotations
 
+import ast
 from typing import Any
 
 from legitifier_pkg.analyzers.base import BaseAnalyzer, analyzer_for
 from legitifier_pkg.core.models import HeuristicConfig, HeuristicResult
+
+_COMMENT_PREFIXES = ("#", "//", "/*", "*")
+
+
+def _collect_docstring_lines(tree: ast.AST) -> set[int]:
+    """Return 1-indexed line numbers occupied by module/class/function docstrings."""
+    lines: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(
+            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+        ):
+            if (
+                node.body
+                and isinstance(node.body[0], ast.Expr)
+                and isinstance(node.body[0].value, ast.Constant)
+                and isinstance(node.body[0].value.value, str)
+            ):
+                docstr = node.body[0]
+                lines.update(range(docstr.lineno, docstr.end_lineno + 1))
+    return lines
+
+
+def _extract_code_only(snippet: dict) -> str:
+    """Return source with comment lines stripped, and docstrings removed for .py files."""
+    content: str = snippet.get("content", "")
+    path: str = snippet.get("path", "")
+    source_lines = content.splitlines()
+
+    if path.endswith(".py"):
+        try:
+            tree = ast.parse(content)
+            docstring_lines = _collect_docstring_lines(tree)
+            return "\n".join(
+                line
+                for i, line in enumerate(source_lines, 1)
+                if i not in docstring_lines
+                and not line.lstrip().startswith(_COMMENT_PREFIXES)
+            )
+        except SyntaxError:
+            pass  # fallback to comment-only filtering below
+
+    return "\n".join(
+        line for line in source_lines if not line.lstrip().startswith(_COMMENT_PREFIXES)
+    )
 
 
 @analyzer_for("code_quality")
@@ -22,7 +67,7 @@ class CodeAnalyzer(BaseAnalyzer):
         api_patterns: list[str] = t.get("api_patterns", [])
         local_claim_patterns: list[str] = t.get("local_claim_patterns", [])
 
-        all_code = "\n".join(s["content"] for s in snippets)
+        all_code = "\n".join(_extract_code_only(s) for s in snippets)
         readme_lower = readme.lower()
 
         api_matches = [p for p in api_patterns if p.lower() in all_code.lower()]
