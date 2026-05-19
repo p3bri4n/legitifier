@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,8 +11,43 @@ from legitifier_pkg.core.models import (
     Verdict,
 )
 from legitifier_pkg.feedback.models import Confidence
-from legitifier_pkg.feedback.store import FeedbackStore
+from legitifier_pkg.feedback.store import FeedbackStore, _install_id
 from legitifier_pkg.fetchers.llm import LLMFetcher
+
+# ── Install ID ───────────────────────────────────────────────────────────────
+
+
+class TestInstallId:
+    def test_persists_across_calls(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("legitifier_pkg.feedback.store.Path.home", lambda: tmp_path)
+        id1 = _install_id()
+        id2 = _install_id()
+        assert id1 == id2
+        assert len(id1) == 36  # UUID4 format
+
+    def test_is_valid_uuid4(self, tmp_path, monkeypatch):
+        import uuid
+
+        monkeypatch.setattr("legitifier_pkg.feedback.store.Path.home", lambda: tmp_path)
+        result = _install_id()
+        parsed = uuid.UUID(result, version=4)
+        assert str(parsed) == result
+
+    def test_falls_back_on_oserror(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("legitifier_pkg.feedback.store.Path.home", lambda: tmp_path)
+        with patch(
+            "legitifier_pkg.feedback.store.Path.write_text", side_effect=OSError
+        ):
+            result = _install_id()
+        assert len(result) == 16  # hash fallback
+
+    def test_does_not_overwrite_existing(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("legitifier_pkg.feedback.store.Path.home", lambda: tmp_path)
+        id_path = tmp_path / ".legitifier" / "install_id"
+        id_path.parent.mkdir(parents=True, exist_ok=True)
+        id_path.write_text("legacy-value-from-old-install")
+        assert _install_id() == "legacy-value-from-old-install"
+
 
 # ── Feedback Store ────────────────────────────────────────────────────────────
 

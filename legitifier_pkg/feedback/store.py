@@ -5,6 +5,7 @@ import json
 import os
 import platform
 import sqlite3
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -36,10 +37,19 @@ def _default_db() -> Path:
     return _DB_PATH
 
 
-def _anonymous_id() -> str:
-    """Stable, anonymous machine fingerprint — no PII."""
-    raw = platform.node() + str(os.getuid() if hasattr(os, "getuid") else "win")
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+def _install_id() -> str:
+    """Persistent, anonymous install identifier stored at ~/.legitifier/install_id."""
+    path = Path.home() / ".legitifier" / "install_id"
+    if path.exists():
+        return path.read_text().strip()
+    new_id = str(uuid.uuid4())
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(new_id)
+    except OSError:
+        raw = platform.node() + str(os.getuid() if hasattr(os, "getuid") else "win")
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+    return new_id
 
 
 class FeedbackStore:
@@ -127,7 +137,7 @@ class FeedbackStore:
             user_verdict=user_verdict,
             confidence=confidence,
             note=note,
-            anonymous_user_id=_anonymous_id(),
+            anonymous_user_id=_install_id(),
         )
         with self._connect() as conn:
             conn.execute(
