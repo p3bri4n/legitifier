@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
 
+      - name: Check data files are in sync
+        run: python scripts/sync_data.py --check
+
       - name: Lint (ruff)
         run: |
           pip install ruff

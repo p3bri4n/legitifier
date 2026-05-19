@@ -1,4 +1,4 @@
-.PHONY: install install-llm install-all test lint lint-fix coverage clean bump help
+.PHONY: install install-llm install-all test lint lint-fix coverage clean bump sync-data help
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -12,6 +12,7 @@ help:
 	@echo "  make lint         — run ruff check + format check"
 	@echo "  make lint-fix     — auto-fix lint and format issues"
 	@echo "  make coverage     — run tests with coverage report"
+	@echo "  make sync-data    — copy data/ files into package"
 	@echo "  make bump         — bump version to YYYY.MMDD.hhmm"
 	@echo "  make clean        — remove venv and caches"
 
@@ -43,6 +44,9 @@ lint-fix:
 
 coverage:
 	$(PYTHON) -m pytest tests/ --cov=legitifier_pkg --cov-report=term-missing
+
+sync-data:
+	$(PYTHON) scripts/sync_data.py
 
 bump:
 	$(PYTHON) scripts/bump_version.py
