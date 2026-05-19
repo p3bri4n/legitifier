@@ -9,3 +9,8 @@ data/seed_schema.md @p3bri4n
 # Core scoring logic — changes need careful review
 legitifier_pkg/core/ @p3bri4n
 legitifier_pkg/data/ @p3bri4n
+
+# Release and security workflows — critical paths
+.github/workflows/release.yml @p3bri4n
+.github/workflows/security.yml @p3bri4n
+SECURITY.md @p3bri4n
