@@ -42,3 +42,17 @@ class HeuristicRegistry:
     @property
     def categories(self) -> set[str]:
         return {h.category for h in self._heuristics.values()}
+
+    def validate_categories(self, known: set[str]) -> None:
+        """Raise ValueError if any loaded heuristic has an unregistered category."""
+        bad = [
+            (h.id, h.category)
+            for h in self._heuristics.values()
+            if h.category not in known
+        ]
+        if bad:
+            lines = "\n".join(f"  {hid!r}: category {cat!r}" for hid, cat in bad)
+            raise ValueError(
+                f"Heuristics with unregistered categories:\n{lines}\n"
+                f"Registered: {sorted(known)}"
+            )

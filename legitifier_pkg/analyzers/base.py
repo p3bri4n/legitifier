@@ -25,6 +25,10 @@ def get_analyzer(category: str) -> BaseAnalyzer:
     return cls()
 
 
+def registered_categories() -> set[str]:
+    return set(_ANALYZER_REGISTRY.keys())
+
+
 class BaseAnalyzer(ABC):
     @abstractmethod
     def analyze(

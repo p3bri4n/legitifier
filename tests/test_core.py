@@ -28,6 +28,27 @@ class TestRegistry:
         with pytest.raises(ValueError, match="Duplicate"):
             registry.load()
 
+    def test_unknown_category_raises(self, tmp_path):
+        (tmp_path / "h.yaml").write_text(
+            "id: myheuristic\ncategory: nonexistent_cat\nweight: 1.0\n"
+        )
+        registry = HeuristicRegistry(tmp_path)
+        registry.load()
+        with pytest.raises(ValueError, match="nonexistent_cat"):
+            registry.validate_categories({"social_signals", "metadata"})
+
+    def test_all_shipped_heuristics_have_registered_categories(self):
+        import legitifier_pkg.analyzers.code  # noqa: F401
+        import legitifier_pkg.analyzers.content  # noqa: F401
+        import legitifier_pkg.analyzers.metadata  # noqa: F401
+        import legitifier_pkg.analyzers.repo_history  # noqa: F401
+        import legitifier_pkg.analyzers.social  # noqa: F401
+        from legitifier_pkg.analyzers.base import registered_categories
+
+        registry = HeuristicRegistry(HEURISTICS_ROOT)
+        registry.load()
+        registry.validate_categories(registered_categories())  # must not raise
+
 
 class TestScorer:
     def _result(self, score: float, severity: str = "medium") -> HeuristicResult:

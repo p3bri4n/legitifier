@@ -9,7 +9,7 @@ import legitifier_pkg.analyzers.content  # noqa: F401
 import legitifier_pkg.analyzers.metadata  # noqa: F401
 import legitifier_pkg.analyzers.repo_history  # noqa: F401
 import legitifier_pkg.analyzers.social  # noqa: F401
-from legitifier_pkg.analyzers.base import get_analyzer
+from legitifier_pkg.analyzers.base import get_analyzer, registered_categories
 from legitifier_pkg.core.models import HeuristicResult, ScanReport, Verdict
 from legitifier_pkg.core.registry import HeuristicRegistry
 from legitifier_pkg.core.scorer import Scorer
@@ -47,6 +47,7 @@ class Pipeline:
         import time
 
         self._registry.load()
+        self._registry.validate_categories(registered_categories())
 
         errors: list[str] = []
         data: dict[str, Any] = {}
