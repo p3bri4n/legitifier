@@ -15,7 +15,7 @@ from legitifier_pkg.core.registry import HeuristicRegistry
 from legitifier_pkg.core.scorer import Scorer
 from legitifier_pkg.data.loader import ReputationStore
 from legitifier_pkg.feedback.store import FeedbackStore
-from legitifier_pkg.fetchers.github import GitHubFetcher
+from legitifier_pkg.fetchers.github import GitHubFetcher, RateLimitError
 from legitifier_pkg.fetchers.llm import LLMClient, LLMFetcher
 from legitifier_pkg.fetchers.local_db import LocalDBFetcher
 
@@ -67,6 +67,20 @@ class Pipeline:
 
             # Detect 404 early — don't score empty data as CLEAN
             if fetch_error and "404" in str(fetch_error):
+                elapsed = round(time.monotonic() - started_at, 1)
+                report = ScanReport(
+                    repo_url=repo_url,
+                    risk_score=0.0,
+                    verdict=Verdict.UNKNOWN,
+                    results=[],
+                    errors=errors,
+                    scan_duration_seconds=elapsed,
+                )
+                scan_id = self._store.save_scan(report)
+                return report, scan_id
+
+            # Detect rate limit — return UNKNOWN with actionable message
+            if isinstance(fetch_error, RateLimitError):
                 elapsed = round(time.monotonic() - started_at, 1)
                 report = ScanReport(
                     repo_url=repo_url,

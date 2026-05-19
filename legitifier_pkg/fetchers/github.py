@@ -15,6 +15,12 @@ _API = "https://api.github.com"
 _TIMEOUT = httpx.Timeout(15.0)
 
 
+class RateLimitError(Exception):
+    def __init__(self, reset_at: datetime | None, message: str) -> None:
+        self.reset_at = reset_at
+        super().__init__(message)
+
+
 class GitHubFetcher:
     def __init__(
         self, token: str | None = None, cache: FetchCache | None = None
@@ -32,8 +38,47 @@ class GitHubFetcher:
             headers=headers, timeout=_TIMEOUT, follow_redirects=True
         )
 
+    def _request(
+        self,
+        path: str,
+        params: dict | None = None,
+        headers: dict | None = None,
+    ) -> httpx.Response:
+        """GET with rate-limit detection and single auto-retry for short waits."""
+        import time as _time
+
+        resp = self._http.get(f"{_API}{path}", params=params, headers=headers)
+
+        if resp.status_code == 429:
+            retry_after = int(resp.headers.get("Retry-After", "61"))
+            if retry_after <= 10:
+                _time.sleep(retry_after)
+                return self._http.get(f"{_API}{path}", params=params, headers=headers)
+            raise RateLimitError(
+                None,
+                f"Rate limit hit (429). Retry-After: {retry_after}s. "
+                "Set GITHUB_TOKEN or wait.",
+            )
+
+        if resp.status_code == 403 and resp.headers.get("X-RateLimit-Remaining") == "0":
+            reset_ts = resp.headers.get("X-RateLimit-Reset")
+            reset_at: datetime | None = None
+            wait_secs = 61.0
+            if reset_ts:
+                reset_at = datetime.fromtimestamp(int(reset_ts), UTC)
+                wait_secs = (reset_at - datetime.now(UTC)).total_seconds()
+            if wait_secs < 60:
+                _time.sleep(max(0.0, wait_secs) + 1.0)
+                return self._http.get(f"{_API}{path}", params=params, headers=headers)
+            raise RateLimitError(
+                reset_at,
+                f"Rate limit hit. Set GITHUB_TOKEN or wait until {reset_at}.",
+            )
+
+        return resp
+
     def _get(self, path: str, params: dict | None = None) -> Any:
-        resp = self._http.get(f"{_API}{path}", params=params)
+        resp = self._request(path, params=params)
         if resp.status_code == 404:
             raise FileNotFoundError(f"404: {path}")
         resp.raise_for_status()
@@ -119,8 +164,8 @@ class GitHubFetcher:
 
         since = (datetime.now(UTC) - timedelta(days=days)).isoformat()
         try:
-            resp = self._http.get(
-                f"{_API}/repos/{slug}/commits",
+            resp = self._request(
+                f"/repos/{slug}/commits",
                 params={"since": since, "per_page": 1},
             )
             if resp.status_code != 200:
@@ -159,8 +204,8 @@ class GitHubFetcher:
         count = 0
         try:
             while len(raw) < limit:
-                resp = self._http.get(
-                    f"{_API}/repos/{slug}/stargazers",
+                resp = self._request(
+                    f"/repos/{slug}/stargazers",
                     params={"per_page": per_page, "page": page},
                     headers={"Accept": "application/vnd.github.star+json"},
                 )
@@ -252,7 +297,7 @@ class GitHubFetcher:
 
         def _check_dir(d: str) -> str | None:
             try:
-                resp = self._http.get(f"{_API}/repos/{slug}/contents/{d}")
+                resp = self._request(f"/repos/{slug}/contents/{d}")
                 return d if resp.status_code == 200 else None
             except Exception:
                 return None
