@@ -38,6 +38,7 @@ class MetadataAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data=context,
         )
@@ -89,6 +90,7 @@ class MetadataAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data=context,
         )
@@ -130,6 +132,7 @@ class MetadataAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data=context,
         )
@@ -145,6 +148,7 @@ class MetadataAnalyzer(BaseAnalyzer):
             score=config.scoring.score_if_clean,
             triggered=False,
             evidence="No signal detected.",
+            category=config.category,
             severity=config.severity,
         )
 
@@ -162,6 +166,7 @@ class MetadataAnalyzer(BaseAnalyzer):
                 score=0.0,
                 triggered=False,
                 evidence="Not in reputation database.",
+                category=config.category,
                 severity=config.severity,
                 raw_data=rep,
             )
@@ -176,6 +181,7 @@ class MetadataAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data=rep,
         )

@@ -39,3 +39,44 @@
 {"type": "owner", "login": "anthropics", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Anthropic — verified organization", "added": "2026-05-16"}
 {"type": "owner", "login": "mistralai", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Mistral AI — verified organization", "added": "2026-05-16"}
 {"type": "owner", "login": "ggerganov", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Author of llama.cpp and whisper.cpp", "added": "2026-05-16"}
+
+# ── Whitelist — verified foundation owners (strong governance, not heterogeneous) ─
+
+{"type": "owner", "login": "apache", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Apache Software Foundation — verified non-profit foundation", "added": "2026-05-19"}
+{"type": "owner", "login": "cncf", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Cloud Native Computing Foundation — verified Linux Foundation project", "added": "2026-05-19"}
+{"type": "owner", "login": "pytorch", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "PyTorch Foundation — Linux Foundation project, Meta origin", "added": "2026-05-19"}
+{"type": "owner", "login": "tensorflow", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "TensorFlow core team — Google-backed open-source project", "added": "2026-05-19"}
+{"type": "owner", "login": "scikit-learn", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Scikit-learn — community-governed ML library", "added": "2026-05-19"}
+{"type": "owner", "login": "numpy", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "NumPy — NumFOCUS sponsored, core scientific Python", "added": "2026-05-19"}
+{"type": "owner", "login": "langchain-ai", "verdict": "CLEAN", "confidence": "probable", "source": "manual", "note": "LangChain official org — established LLM framework", "added": "2026-05-19"}
+{"type": "owner", "login": "run-llama", "verdict": "CLEAN", "confidence": "probable", "source": "manual", "note": "LlamaIndex official org — established RAG framework", "added": "2026-05-19"}
+{"type": "owner", "login": "ollama", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Ollama — verified local LLM runtime, widely adopted", "added": "2026-05-19"}
+{"type": "owner", "login": "comfyanonymous", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Author of ComfyUI — widely adopted Stable Diffusion node UI", "added": "2026-05-19"}
+
+# ── Whitelist — flagship repos from heterogeneous orgs (repo-level only) ─────────
+# microsoft/google/meta orgs are too heterogeneous for owner-level whitelisting.
+# Specific flagship repos can be whitelisted individually.
+
+{"type": "repo", "slug": "kubernetes/kubernetes", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Kubernetes core — CNCF graduated project", "added": "2026-05-19"}
+{"type": "repo", "slug": "pytorch/pytorch", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "PyTorch main framework — Linux Foundation project", "added": "2026-05-19"}
+{"type": "repo", "slug": "microsoft/vscode", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "VS Code — Microsoft flagship open-source editor", "added": "2026-05-19"}
+{"type": "repo", "slug": "microsoft/TypeScript", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "TypeScript — Microsoft language project, widely adopted", "added": "2026-05-19"}
+{"type": "repo", "slug": "microsoft/semantic-kernel", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Semantic Kernel — Microsoft AI SDK", "added": "2026-05-19"}
+{"type": "repo", "slug": "google/jax", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "JAX — Google ML research framework", "added": "2026-05-19"}
+{"type": "repo", "slug": "google/gemma_pytorch", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Gemma PyTorch — Google official model weights", "added": "2026-05-19"}
+{"type": "repo", "slug": "facebookresearch/llama", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "LLaMA original repo — Meta AI Research", "added": "2026-05-19"}
+{"type": "repo", "slug": "meta-llama/llama3", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "LLaMA 3 — Meta official release", "added": "2026-05-19"}
+{"type": "repo", "slug": "meta-llama/llama-models", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Meta LLaMA models repo", "added": "2026-05-19"}
+{"type": "repo", "slug": "openai/openai-python", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Official OpenAI Python SDK", "added": "2026-05-19"}
+{"type": "repo", "slug": "openai/whisper", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Whisper — OpenAI speech recognition model", "added": "2026-05-19"}
+{"type": "repo", "slug": "anthropics/anthropic-sdk-python", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Official Anthropic Python SDK", "added": "2026-05-19"}
+{"type": "repo", "slug": "vllm-project/vllm", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "vLLM — UC Berkeley inference engine, widely adopted", "added": "2026-05-19"}
+{"type": "repo", "slug": "ggerganov/llama.cpp", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "llama.cpp — C++ LLM inference, author already whitelisted", "added": "2026-05-19"}
+{"type": "repo", "slug": "ggerganov/whisper.cpp", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "whisper.cpp — C++ speech recognition", "added": "2026-05-19"}
+{"type": "repo", "slug": "AUTOMATIC1111/stable-diffusion-webui", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Stable Diffusion Web UI — widely adopted, community-governed", "added": "2026-05-19"}
+{"type": "repo", "slug": "invoke-ai/InvokeAI", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "InvokeAI — community-governed SD interface", "added": "2026-05-19"}
+{"type": "repo", "slug": "huggingface/transformers", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "HuggingFace transformers — flagship NLP library", "added": "2026-05-19"}
+{"type": "repo", "slug": "huggingface/diffusers", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "HuggingFace diffusers — diffusion model library", "added": "2026-05-19"}
+{"type": "repo", "slug": "langchain-ai/langchain", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "LangChain main repo", "added": "2026-05-19"}
+{"type": "repo", "slug": "run-llama/llama_index", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "LlamaIndex main repo", "added": "2026-05-19"}
+{"type": "repo", "slug": "ollama/ollama", "verdict": "CLEAN", "confidence": "certain", "source": "manual", "note": "Ollama main repo", "added": "2026-05-19"}

@@ -56,6 +56,7 @@ class HeuristicResult(BaseModel):
     triggered: bool
     evidence: str
     severity: Severity
+    category: str = ""
     raw_data: dict[str, Any] = Field(default_factory=dict)
 
 

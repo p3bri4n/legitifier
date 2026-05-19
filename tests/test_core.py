@@ -59,15 +59,23 @@ class TestScorer:
     def test_whitelist_caps_score(self):
         scorer = Scorer()
         report = scorer.aggregate(
-            "url", [self._result(90, "critical")], [], whitelisted=True
+            "url",
+            [self._result(90, "critical")],
+            [],
+            whitelist_match={"confidence": "certain", "type": "owner"},
         )
         assert report.risk_score == 49.0
         assert report.verdict == Verdict.SUSPICIOUS
-        assert any("whitelisted" in e for e in report.errors)
+        assert any("capped" in e for e in report.errors)
 
     def test_whitelist_no_effect_on_low_score(self):
         scorer = Scorer()
-        report = scorer.aggregate("url", [self._result(10)], [], whitelisted=True)
+        report = scorer.aggregate(
+            "url",
+            [self._result(10)],
+            [],
+            whitelist_match={"confidence": "certain", "type": "owner"},
+        )
         assert report.risk_score < 49.0
         assert report.verdict == Verdict.CLEAN
         scorer = Scorer()

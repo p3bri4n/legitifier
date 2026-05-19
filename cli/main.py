@@ -47,6 +47,9 @@ def scan(
         False, "--no-cache", help="Bypass cache and force fresh fetch"
     ),
     ttl: int = typer.Option(6, "--ttl", help="Cache TTL in hours (default: 6)"),
+    no_whitelist: bool = typer.Option(
+        False, "--no-whitelist", help="Disable whitelist capping (audit mode)"
+    ),
 ) -> None:
     """Scan a single GitHub repository."""
     from legitifier_pkg.cache import FetchCache  # noqa: F401
@@ -60,7 +63,7 @@ def scan(
     )
     if no_cache:
         pipeline._github._cache.delete(repo)
-    report, scan_id = pipeline.run(repo)
+    report, scan_id = pipeline.run(repo, no_whitelist=no_whitelist)
 
     if output == "json":
         typer.echo(report.model_dump_json(indent=2))

@@ -34,14 +34,23 @@ class LocalDBFetcher:
 
     def _owner_rep(self, owner: str, slug: str) -> dict[str, Any]:
         # Check repo slug first (more specific), then owner
-        entry = self._store.lookup(slug) or self._store.lookup(owner)
+        repo_entry = self._store.lookup(slug)
+        owner_entry = self._store.lookup(owner)
+        entry = repo_entry or owner_entry
         if not entry:
-            return {"score": 0.0, "verdict": None, "confidence": None, "note": None}
+            return {
+                "score": 0.0,
+                "verdict": None,
+                "confidence": None,
+                "note": None,
+                "matched_type": None,
+            }
         return {
             "score": self._store.score(entry.key),
             "verdict": entry.verdict.value,
             "confidence": entry.confidence.value,
             "note": entry.note,
+            "matched_type": "repo" if repo_entry else "owner",
         }
 
     def _contributor_rep(self, data: dict[str, Any]) -> dict[str, Any]:

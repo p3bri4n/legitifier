@@ -89,6 +89,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={
                 "api_matches": api_matches,
@@ -108,6 +109,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=config.scoring.score_if_clean,
             triggered=False,
             evidence="No signal detected.",
+            category=config.category,
             severity=config.severity,
         )
 
@@ -144,6 +146,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={"secret_matches": secret_matches, "files_scanned": len(snippets)},
         )
@@ -192,6 +195,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={"duplicates": duplicates},
         )
@@ -267,6 +271,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={
                 "test_files": n_tests,
@@ -360,6 +365,7 @@ class CodeAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={
                 "signals": signals,

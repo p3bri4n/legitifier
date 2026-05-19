@@ -67,6 +67,7 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=evidence,
+            category=config.category,
             severity=config.severity,
             raw_data=context,
         )
@@ -112,5 +113,6 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
             score=config.scoring.score_if_clean,
             triggered=False,
             evidence="No signal detected.",
+            category=config.category,
             severity=config.severity,
         )

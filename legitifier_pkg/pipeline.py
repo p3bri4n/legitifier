@@ -42,7 +42,7 @@ class Pipeline:
         self._store = store or FeedbackStore()
         self._silent = silent  # disable progress in tests / batch mode
 
-    def run(self, repo_url: str) -> tuple[ScanReport, int]:
+    def run(self, repo_url: str, no_whitelist: bool = False) -> tuple[ScanReport, int]:
         """Returns (report, scan_id) — scan_id used to attach feedback later."""
         import time
 
@@ -119,9 +119,16 @@ class Pipeline:
                     errors.append(f"Analyzer error [{config.id}]: {exc}")
 
         elapsed = round(time.monotonic() - started_at, 1)
-        whitelisted = data.get("owner_reputation", {}).get("verdict") == "CLEAN"
+        whitelist_match = None
+        if not no_whitelist:
+            rep = data.get("owner_reputation") or {}
+            if rep.get("verdict") == "CLEAN":
+                whitelist_match = {
+                    "confidence": rep.get("confidence", "probable"),
+                    "type": rep.get("matched_type", "owner"),
+                }
         report = self._scorer.aggregate(
-            repo_url, results, errors, whitelisted=whitelisted, duration=elapsed
+            repo_url, results, errors, whitelist_match=whitelist_match, duration=elapsed
         )
         scan_id = self._store.save_scan(report)
         # Propagate reputation from scam contributors

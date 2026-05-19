@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from legitifier_pkg.core.models import HeuristicResult, ScanReport
+from legitifier_pkg.core.models import HeuristicResult, ScanReport, Severity
 
-_WHITELIST_MAX_SCORE = 49.0
+_WHITELIST_CAPS: dict[str, float | None] = {
+    "certain": 49.0,
+    "probable": 65.0,
+    "unsure": None,  # no cap, just -10 bonus
+}
 
 _SEVERITY_WEIGHT = {"low": 0.5, "medium": 1.0, "high": 1.5, "critical": 2.0}
+
+_BYPASS_CATEGORIES = {"code_quality", "content_claims"}
 
 
 class Scorer:
@@ -32,7 +38,7 @@ class Scorer:
         repo_url: str,
         results: list[HeuristicResult],
         errors: list[str],
-        whitelisted: bool = False,
+        whitelist_match: dict | None = None,
         duration: float = 0.0,
     ) -> ScanReport:
         if not results:
@@ -61,12 +67,21 @@ class Scorer:
 
         risk_score = round(risk_score, 2)
 
-        if whitelisted and risk_score > _WHITELIST_MAX_SCORE:
-            risk_score = _WHITELIST_MAX_SCORE
-            errors = [
-                *errors,
-                "Score capped: owner/repo is whitelisted (CLEAN in reputation store).",
-            ]
+        if whitelist_match and not self._should_bypass_whitelist(results):
+            confidence = whitelist_match.get("confidence", "probable")
+            cap = _WHITELIST_CAPS.get(confidence)
+            if cap is not None:
+                if risk_score > cap:
+                    risk_score = cap
+                    errors = [
+                        *errors,
+                        f"Score capped at {cap:.0f}: {whitelist_match.get('type', 'owner')}"
+                        " is whitelisted (CLEAN, confidence="
+                        f"{confidence}).",
+                    ]
+            else:
+                # unsure: soft bonus only
+                risk_score = max(risk_score - 10, 0)
 
         from legitifier_pkg import __version__
 
@@ -79,6 +94,16 @@ class Scorer:
             scan_duration_seconds=duration,
             scanner_version=__version__,
         )
+
+    @staticmethod
+    def _should_bypass_whitelist(results: list[HeuristicResult]) -> bool:
+        """Bypass whitelist cap when 2+ critical signals from code/content categories."""
+        critical = [
+            r for r in results if r.triggered and r.severity == Severity.CRITICAL
+        ]
+        if len(critical) < 2:
+            return False
+        return any(r.category in _BYPASS_CATEGORIES for r in critical)
 
     @staticmethod
     def _weight(result: HeuristicResult) -> float:

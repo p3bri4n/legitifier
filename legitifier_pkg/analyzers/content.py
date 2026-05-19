@@ -23,6 +23,7 @@ class ContentAnalyzer(BaseAnalyzer):
                 score=0.0,
                 triggered=False,
                 evidence="LLM analysis skipped (no API key configured).",
+                category=config.category,
                 severity=config.severity,
             )
 
@@ -55,6 +56,7 @@ class ContentAnalyzer(BaseAnalyzer):
             score=round(score, 2),
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={"llm": llm},
         )
@@ -70,6 +72,7 @@ class ContentAnalyzer(BaseAnalyzer):
             score=config.scoring.score_if_clean,
             triggered=False,
             evidence="No signal detected.",
+            category=config.category,
             severity=config.severity,
         )
 
@@ -108,6 +111,7 @@ class ContentAnalyzer(BaseAnalyzer):
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
+            category=config.category,
             severity=config.severity,
             raw_data={"telegram_matches": telegram_matches, "amplifiers": amplifiers},
         )
