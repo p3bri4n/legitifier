@@ -97,10 +97,14 @@ class ReputationStore:
     def score(self, key: str) -> float:
         """
         Returns a 0-100 reputation score (higher = more suspicious).
-        0 if unknown or CLEAN, weighted by confidence.
+        0 if unknown, CLEAN, or auto-propagated with unsure confidence.
+        Weighted by confidence otherwise.
         """
         entry = self.lookup(key)
         if not entry or entry.verdict == ReputationVerdict.CLEAN:
+            return 0.0
+        # Auto-propagated entries require human promotion before affecting scores
+        if entry.source == "auto" and entry.confidence == ReputationConfidence.UNSURE:
             return 0.0
         base = 90.0 if entry.verdict == ReputationVerdict.SCAM else 50.0
         return round(base * _CONFIDENCE_WEIGHT[entry.confidence], 1)

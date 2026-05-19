@@ -242,7 +242,7 @@ class TestContributorReputationPropagation:
 
         # Instantiate AFTER insertion so entries are loaded from DB
         rep_store = ReputationStore(
-            seed_path=tmp_path / "empty.jsonl", db_path=store._path
+            seed_path=tmp_path / "empty.jsonl", db_path=store.path
         )
         entry = rep_store.lookup("bad_actor")
         assert entry is not None

@@ -312,8 +312,13 @@ class FeedbackStore:
         min_risk_score: float = 50.0,
     ) -> int:
         """
-        After a SCAM/LIKELY_SCAM scan, extract PR authors and stargazers
-        with suspicious profiles and record them in the local reputation DB.
+        After a SCAM/LIKELY_SCAM scan, extract PR authors flagged by heuristics
+        and record them in the local reputation DB.
+
+        Auto-propagated entries are stored with confidence='unsure' and
+        source='auto', and do not contribute to the reputation score until
+        manually promoted via --feedback.
+
         Returns count of new entries added.
         """
         if report.risk_score < min_risk_score:
@@ -355,7 +360,7 @@ class FeedbackStore:
                             login,
                             None,
                             verdict,
-                            "probable",
+                            "unsure",
                             "auto",
                             f"Contributor to {report.repo_url}",
                             now_date,
