@@ -12,9 +12,13 @@ def _write_seed(tmp_path: Path, entries: list[dict]) -> Path:
 
 def _valid_entry(**overrides) -> dict:
     base = {
-        "type": "owner", "login": "bad-actor",
-        "verdict": "SCAM", "confidence": "probable",
-        "source": "manual", "note": "known scammer", "added": "2026-05-16",
+        "type": "owner",
+        "login": "bad-actor",
+        "verdict": "SCAM",
+        "confidence": "probable",
+        "source": "manual",
+        "note": "known scammer",
+        "added": "2026-05-16",
     }
     return {**base, **overrides}
 
@@ -25,9 +29,9 @@ class TestValidateEntry:
         assert errors == []
 
     def test_valid_repo(self):
-        entry, errors = validate_entry(1, json.dumps(_valid_entry(
-            type="repo", slug="bad-actor/scam", login=None
-        )))
+        entry, errors = validate_entry(
+            1, json.dumps(_valid_entry(type="repo", slug="bad-actor/scam", login=None))
+        )
         assert errors == []
 
     def test_missing_fields(self):
@@ -39,22 +43,28 @@ class TestValidateEntry:
         assert any("invalid JSON" in e for e in errors)
 
     def test_certain_without_external_source(self):
-        _, errors = validate_entry(1, json.dumps(
-            _valid_entry(confidence="certain", source="manual", verdict="SCAM")
-        ))
+        _, errors = validate_entry(
+            1,
+            json.dumps(
+                _valid_entry(confidence="certain", source="manual", verdict="SCAM")
+            ),
+        )
         assert any("certain" in e for e in errors)
 
     def test_certain_manual_allowed_for_clean(self):
         # Whitelist entries may use certain+manual
-        _, errors = validate_entry(1, json.dumps(
-            _valid_entry(confidence="certain", source="manual", verdict="CLEAN")
-        ))
+        _, errors = validate_entry(
+            1,
+            json.dumps(
+                _valid_entry(confidence="certain", source="manual", verdict="CLEAN")
+            ),
+        )
         assert errors == []
 
     def test_certain_with_external_source(self):
-        _, errors = validate_entry(1, json.dumps(
-            _valid_entry(confidence="certain", source="wall-of-shames")
-        ))
+        _, errors = validate_entry(
+            1, json.dumps(_valid_entry(confidence="certain", source="wall-of-shames"))
+        )
         assert errors == []
 
     def test_invalid_verdict(self):
@@ -70,15 +80,15 @@ class TestValidateEntry:
         assert any("note" in e for e in errors)
 
     def test_repo_without_slug(self):
-        _, errors = validate_entry(1, json.dumps(
-            _valid_entry(type="repo", slug=None, login=None)
-        ))
+        _, errors = validate_entry(
+            1, json.dumps(_valid_entry(type="repo", slug=None, login=None))
+        )
         assert any("slug" in e for e in errors)
 
     def test_slug_without_slash(self):
-        _, errors = validate_entry(1, json.dumps(
-            _valid_entry(type="repo", slug="noslash", login=None)
-        ))
+        _, errors = validate_entry(
+            1, json.dumps(_valid_entry(type="repo", slug="noslash", login=None))
+        )
         assert any("owner/repo" in e for e in errors)
 
 

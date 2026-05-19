@@ -12,7 +12,9 @@ class ContentAnalyzer(BaseAnalyzer):
         handler = getattr(self, f"_handle_{config.id}", self._handle_unknown)
         return handler(config, data)
 
-    def _handle_readme_llm_analysis(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_readme_llm_analysis(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         llm: dict[str, Any] = data.get("llm_analysis") or {}
 
         if not llm and config.thresholds.get("skip_if_missing", True):
@@ -57,7 +59,9 @@ class ContentAnalyzer(BaseAnalyzer):
             raw_data={"llm": llm},
         )
 
-    def _handle_unknown(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_unknown(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         return self._clean_result(config)
 
     def _clean_result(self, config: HeuristicConfig) -> HeuristicResult:
@@ -69,9 +73,13 @@ class ContentAnalyzer(BaseAnalyzer):
             severity=config.severity,
         )
 
-    def _handle_telegram_funnel(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_telegram_funnel(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         readme: str = (data.get("readme") or "").lower()
-        all_code = "\n".join(s["content"] for s in data.get("code_snippets", [])).lower()
+        all_code = "\n".join(
+            s["content"] for s in data.get("code_snippets", [])
+        ).lower()
         text = readme + "\n" + all_code
 
         t = config.thresholds
@@ -83,11 +91,17 @@ class ContentAnalyzer(BaseAnalyzer):
 
         triggered = bool(telegram_matches) and bool(amplifiers)
         # Telegram alone without commercial signals = likely community link, not scam
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
 
         context = {
             "telegram_matches": ", ".join(telegram_matches[:3]),
-            "amplifier_note": f"Amplifiers: {', '.join(amplifiers[:3])}" if amplifiers else "",
+            "amplifier_note": f"Amplifiers: {', '.join(amplifiers[:3])}"
+            if amplifiers
+            else "",
         }
         return HeuristicResult(
             heuristic_id=config.id,

@@ -45,7 +45,9 @@ class Scorer:
             else:
                 # Weighted average of triggered scores only
                 total_weight = sum(self._weight(r) for r in triggered)
-                weighted_avg = sum(r.score * self._weight(r) for r in triggered) / total_weight
+                weighted_avg = (
+                    sum(r.score * self._weight(r) for r in triggered) / total_weight
+                )
 
                 # Boost from the single strongest signal
                 max_score = max(r.score for r in triggered)
@@ -61,9 +63,13 @@ class Scorer:
 
         if whitelisted and risk_score > _WHITELIST_MAX_SCORE:
             risk_score = _WHITELIST_MAX_SCORE
-            errors = [*errors, "Score capped: owner/repo is whitelisted (CLEAN in reputation store)."]
+            errors = [
+                *errors,
+                "Score capped: owner/repo is whitelisted (CLEAN in reputation store).",
+            ]
 
         from legitifier_pkg import __version__
+
         return ScanReport(
             repo_url=repo_url,
             risk_score=risk_score,

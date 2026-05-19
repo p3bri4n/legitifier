@@ -25,9 +25,9 @@ def _serialize(obj: Any) -> Any:
 def _deserialize(obj: Any) -> Any:
     if isinstance(obj, str):
         if obj.startswith(_DT_PREFIX):
-            return datetime.fromisoformat(obj[len(_DT_PREFIX):])
+            return datetime.fromisoformat(obj[len(_DT_PREFIX) :])
         if obj.startswith(_DATE_PREFIX):
-            return date.fromisoformat(obj[len(_DATE_PREFIX):])
+            return date.fromisoformat(obj[len(_DATE_PREFIX) :])
     if isinstance(obj, dict):
         return {k: _deserialize(v) for k, v in obj.items()}
     if isinstance(obj, list):

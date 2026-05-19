@@ -14,7 +14,9 @@ class SocialAnalyzer(BaseAnalyzer):
         handler = getattr(self, f"_handle_{config.id}", self._handle_unknown)
         return handler(config, data)
 
-    def _handle_stars_velocity(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_stars_velocity(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         sample: list[dict] = data.get("stargazers_sample", [])
         t = config.thresholds
         window = t.get("spike_window_days", 3)
@@ -36,8 +38,12 @@ class SocialAnalyzer(BaseAnalyzer):
                 max_window, spike_start = self._max_window_count(counts, window)
 
                 # Baseline: days outside the spike window
-                baseline = {d: v for d, v in counts.items()
-                            if spike_start is None or not (spike_start <= d < spike_start + timedelta(days=window))}
+                baseline = {
+                    d: v
+                    for d, v in counts.items()
+                    if spike_start is None
+                    or not (spike_start <= d < spike_start + timedelta(days=window))
+                }
 
                 if baseline:
                     # Average over the full observed period, not just days with stars
@@ -62,7 +68,11 @@ class SocialAnalyzer(BaseAnalyzer):
                 "avg_stars_per_day": round(avg_per_day, 1),
             }
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -72,7 +82,9 @@ class SocialAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_ai_prs(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_ai_prs(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         prs: list[dict] = data.get("recent_prs", [])
         if not prs:
             return self._clean_result(config)
@@ -97,7 +109,8 @@ class SocialAnalyzer(BaseAnalyzer):
 
         # Suspicious authors
         suspicious = sum(
-            1 for p in prs
+            1
+            for p in prs
             if p.get("user_followers", 0) <= max_followers
             and p.get("user_public_repos", 0) <= max_repos
         )
@@ -115,7 +128,11 @@ class SocialAnalyzer(BaseAnalyzer):
             "dead_ratio_pct": round(dead_ratio * 100),
             "suspicious_authors": round(suspicious_ratio * 100),
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -125,7 +142,9 @@ class SocialAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_fork_ratio(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_fork_ratio(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         stars = data.get("stars", 0)
         forks = data.get("forks", 0)
         created_at = data.get("created_at")
@@ -137,6 +156,7 @@ class SocialAnalyzer(BaseAnalyzer):
         # Skip young repos — low fork ratio is normal early in a project's life
         if created_at:
             from datetime import datetime
+
             if created_at.tzinfo is None:
                 created_at = created_at.replace(tzinfo=UTC)
             age_days = (datetime.now(UTC) - created_at).days
@@ -150,7 +170,11 @@ class SocialAnalyzer(BaseAnalyzer):
         if stars >= min_stars and ratio < min_ratio:
             triggered = True
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -160,7 +184,9 @@ class SocialAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_low_activity_stargazers(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_low_activity_stargazers(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         sample: list[dict] = data.get("stargazers_sample", [])
         t = config.thresholds
         max_repos = t.get("max_public_repos", 2)
@@ -173,13 +199,17 @@ class SocialAnalyzer(BaseAnalyzer):
         suspicious = 0
         bought_profile = 0  # aged account + empty = likely purchased
         for u in sample:
-            is_empty = u.get("public_repos", 0) <= max_repos and u.get("followers", 0) <= max_followers
+            is_empty = (
+                u.get("public_repos", 0) <= max_repos
+                and u.get("followers", 0) <= max_followers
+            )
             if is_empty:
                 suspicious += 1
                 # Bought profile pattern: account old (>365 days) but completely empty
                 created_at = u.get("created_at")
                 if created_at:
                     from datetime import datetime
+
                     if created_at.tzinfo is None:
                         created_at = created_at.replace(tzinfo=UTC)
                     age_days = (datetime.now(UTC) - created_at).days
@@ -194,7 +224,11 @@ class SocialAnalyzer(BaseAnalyzer):
             "ratio_pct": round(ratio * 100, 1),
             "bought_profile_count": bought_profile,
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         # Boost score if many aged-but-empty accounts (stronger signal of purchase)
         if triggered and bought_profile > suspicious * 0.5:
             score = min(score + 10, 100.0)
@@ -208,7 +242,9 @@ class SocialAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_unknown(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_unknown(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         return self._clean_result(config)
 
     def _clean_result(self, config: HeuristicConfig) -> HeuristicResult:
@@ -243,7 +279,9 @@ class SocialAnalyzer(BaseAnalyzer):
                 max_count, best_start = total, start
         return max_count, best_start
 
-    def _handle_contributor_reputation(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_contributor_reputation(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         rep: dict = data.get("contributor_reputation") or {}
         score = float(rep.get("score", 0.0))
         min_score = config.thresholds.get("min_score_to_trigger", 30)
@@ -263,7 +301,9 @@ class SocialAnalyzer(BaseAnalyzer):
             raw_data=rep,
         )
 
-    def _handle_watcher_to_star_ratio(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_watcher_to_star_ratio(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         stars = data.get("stars", 0)
         watchers = data.get("watchers", 0)
         t = config.thresholds
@@ -282,7 +322,11 @@ class SocialAnalyzer(BaseAnalyzer):
         triggered = ratio < max_ratio
         context = {"ratio": ratio, "watchers": watchers, "stars": stars}
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,

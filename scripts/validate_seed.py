@@ -13,6 +13,7 @@ Usage:
     python scripts/validate_seed.py                    # validate current seed
     python scripts/validate_seed.py --against main     # compare with main branch (CI mode)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -58,7 +59,9 @@ def validate_entry(lineno: int, raw: str) -> tuple[dict | None, Errors]:
 
     # type
     if entry.get("type") not in VALID_TYPES:
-        errors.append(f"Line {lineno}: invalid type '{entry.get('type')}' — must be one of {VALID_TYPES}")
+        errors.append(
+            f"Line {lineno}: invalid type '{entry.get('type')}' — must be one of {VALID_TYPES}"
+        )
 
     # login or slug required depending on type
     if entry.get("type") in ("owner", "contributor") and not entry.get("login"):
@@ -77,9 +80,11 @@ def validate_entry(lineno: int, raw: str) -> tuple[dict | None, Errors]:
         errors.append(f"Line {lineno}: invalid confidence '{entry.get('confidence')}'")
 
     # certain requires external source — except for CLEAN entries (whitelist)
-    if (entry.get("confidence") == "certain"
-            and entry.get("verdict") != "CLEAN"
-            and entry.get("source") not in EXTERNAL_SOURCES):
+    if (
+        entry.get("confidence") == "certain"
+        and entry.get("verdict") != "CLEAN"
+        and entry.get("source") not in EXTERNAL_SOURCES
+    ):
         errors.append(
             f"Line {lineno}: confidence 'certain' requires an external source "
             f"({EXTERNAL_SOURCES}), got '{entry.get('source')}'. "
@@ -130,18 +135,22 @@ def validate_append_only(path: Path, base_branch: str = "main") -> Errors:
     try:
         result = subprocess.run(
             ["git", "show", f"{base_branch}:{path.relative_to(Path.cwd())}"],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         )
         base_content = result.stdout
     except subprocess.CalledProcessError:
         return []  # base branch doesn't have the file yet — OK
 
     base_lines = {
-        line.strip() for line in base_content.splitlines()
+        line.strip()
+        for line in base_content.splitlines()
         if line.strip() and not line.strip().startswith("#")
     }
     current_lines = {
-        line.strip() for line in path.read_text().splitlines()
+        line.strip()
+        for line in path.read_text().splitlines()
         if line.strip() and not line.strip().startswith("#")
     }
 
@@ -150,7 +159,9 @@ def validate_append_only(path: Path, base_branch: str = "main") -> Errors:
         try:
             entry = json.loads(line)
             key = entry.get("slug") or entry.get("login")
-            errors.append(f"Append-only violation: entry '{key}' was removed or modified.")
+            errors.append(
+                f"Append-only violation: entry '{key}' was removed or modified."
+            )
         except json.JSONDecodeError:
             errors.append("Append-only violation: a line was removed or modified.")
 
@@ -159,10 +170,14 @@ def validate_append_only(path: Path, base_branch: str = "main") -> Errors:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--against", metavar="BRANCH",
-                        help="Check append-only against this branch (e.g. main)")
-    parser.add_argument("--seed", type=Path, default=SEED_PATH,
-                        help="Path to seed file")
+    parser.add_argument(
+        "--against",
+        metavar="BRANCH",
+        help="Check append-only against this branch (e.g. main)",
+    )
+    parser.add_argument(
+        "--seed", type=Path, default=SEED_PATH, help="Path to seed file"
+    )
     args = parser.parse_args()
 
     print(f"Validating {args.seed}...")

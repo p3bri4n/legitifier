@@ -40,7 +40,9 @@ class GraphQLStargazerFetcher:
             "Content-Type": "application/json",
         }
 
-    def fetch(self, owner: str, repo: str, total_stars: int, target: int = 60) -> list[dict[str, Any]]:
+    def fetch(
+        self, owner: str, repo: str, total_stars: int, target: int = 60
+    ) -> list[dict[str, Any]]:
         """
         Fetch `target` stargazers stratified across the full star timeline.
         Uses cursor-based pagination to skip to different points in the history.
@@ -99,7 +101,9 @@ class GraphQLStargazerFetcher:
         except Exception:
             return None
 
-    def _skip_to_cursor(self, owner: str, repo: str, cursor: str | None, pages: int) -> str | None:
+    def _skip_to_cursor(
+        self, owner: str, repo: str, cursor: str | None, pages: int
+    ) -> str | None:
         """Advance the cursor by `pages` pages without fetching full profile data."""
         _skip_query = """
         query($owner: String!, $repo: String!, $cursor: String) {
@@ -135,6 +139,7 @@ class GraphQLStargazerFetcher:
     @staticmethod
     def _parse_edge(edge: dict) -> dict[str, Any]:
         from datetime import datetime
+
         node = edge.get("node", {})
         starred_raw = edge.get("starredAt")
         starred_at = None

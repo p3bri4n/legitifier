@@ -21,14 +21,14 @@ class ReputationConfidence(StrEnum):
 
 class ReputationEntry(BaseModel):
     type: Literal["owner", "repo", "contributor"]
-    login: str | None = None        # for owner/contributor
-    slug: str | None = None         # for repo (owner/repo)
+    login: str | None = None  # for owner/contributor
+    slug: str | None = None  # for repo (owner/repo)
     verdict: ReputationVerdict
     confidence: ReputationConfidence = ReputationConfidence.PROBABLE
-    source: str = "manual"          # manual | wall-of-shames | starscout | user
+    source: str = "manual"  # manual | wall-of-shames | starscout | user
     note: str | None = None
     added: date
-    supersedes: str | None = None   # login or slug of entry this overrides
+    supersedes: str | None = None  # login or slug of entry this overrides
 
     @property
     def key(self) -> str:

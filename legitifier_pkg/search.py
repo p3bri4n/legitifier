@@ -13,7 +13,7 @@ _RATE_LIMIT_PAUSE = 2.0
 def _find_presets() -> Path:
     candidates = [
         Path(__file__).parents[2] / "data" / "search_presets.yaml",  # source tree
-        Path(__file__).parent / "search_presets.yaml",               # bundled alongside
+        Path(__file__).parent / "search_presets.yaml",  # bundled alongside
     ]
     for p in candidates:
         if p.exists():
@@ -58,8 +58,18 @@ def build_query(
 
 
 _TRENDING_URL = "https://github.com/trending"
-_EXCLUDED_SLUGS = {"sponsors", "apps", "marketplace", "trending", "explore",
-                   "topics", "collections", "features", "login", "signup"}
+_EXCLUDED_SLUGS = {
+    "sponsors",
+    "apps",
+    "marketplace",
+    "trending",
+    "explore",
+    "topics",
+    "collections",
+    "features",
+    "login",
+    "signup",
+}
 
 
 def trending_repos(
@@ -73,7 +83,12 @@ def trending_repos(
     since: daily | weekly | monthly
     """
     import re
-    url = f"{_TRENDING_URL}/{language}?since={since}" if language else f"{_TRENDING_URL}?since={since}"
+
+    url = (
+        f"{_TRENDING_URL}/{language}?since={since}"
+        if language
+        else f"{_TRENDING_URL}?since={since}"
+    )
     try:
         resp = httpx.get(url, headers={"User-Agent": "legitifier/1.0"}, timeout=10)
         resp.raise_for_status()
@@ -125,8 +140,13 @@ def search_repos(
         try:
             resp = httpx.get(
                 _SEARCH_API,
-                params={"q": query, "sort": "stars", "order": "desc",
-                        "per_page": per_page, "page": page},
+                params={
+                    "q": query,
+                    "sort": "stars",
+                    "order": "desc",
+                    "per_page": per_page,
+                    "page": page,
+                },
                 headers=headers,
                 timeout=15,
             )
@@ -194,7 +214,12 @@ def starscout_repos(limit: int = 100) -> Iterator[tuple[str, int]]:
     for row in reader:
         if index >= limit:
             break
-        slug = row.get("repo_name") or row.get("name") or row.get("full_name") or row.get("repository")
+        slug = (
+            row.get("repo_name")
+            or row.get("name")
+            or row.get("full_name")
+            or row.get("repository")
+        )
         if slug:
             slug = slug.strip()
             if not slug.startswith("http"):
@@ -210,6 +235,7 @@ def file_repos(path: str, limit: int = 1000) -> Iterator[tuple[str, int]]:
     Lines starting with # are ignored.
     """
     from pathlib import Path as P
+
     p = P(path)
     if not p.exists():
         yield f"__error__:File not found: {path}", 0

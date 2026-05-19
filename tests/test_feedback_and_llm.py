@@ -16,6 +16,7 @@ from legitifier_pkg.fetchers.llm import LLMFetcher
 
 # ── Feedback Store ────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def store(tmp_path):
     return FeedbackStore(db_path=tmp_path / "test.db")
@@ -23,8 +24,12 @@ def store(tmp_path):
 
 @pytest.fixture
 def sample_report():
-    return ScanReport(repo_url="https://github.com/x/y", risk_score=80.0,
-                      verdict=Verdict.SCAM, results=[])
+    return ScanReport(
+        repo_url="https://github.com/x/y",
+        risk_score=80.0,
+        verdict=Verdict.SCAM,
+        results=[],
+    )
 
 
 class TestFeedbackStore:
@@ -34,7 +39,9 @@ class TestFeedbackStore:
 
     def test_save_feedback(self, store, sample_report):
         scan_id = store.save_scan(sample_report)
-        record = store.save_feedback(scan_id, Verdict.SCAM, Confidence.CERTAIN, "obvious scam")
+        record = store.save_feedback(
+            scan_id, Verdict.SCAM, Confidence.CERTAIN, "obvious scam"
+        )
         assert record.user_verdict == Verdict.SCAM
         assert record.note == "obvious scam"
 
@@ -51,6 +58,7 @@ class TestFeedbackStore:
 
 # ── LLM Fetcher ───────────────────────────────────────────────────────────────
 
+
 class TestLLMFetcher:
     def _fetcher(self, response: str) -> LLMFetcher:
         client = MagicMock()
@@ -58,10 +66,18 @@ class TestLLMFetcher:
         return LLMFetcher(client)
 
     def test_parses_valid_json(self):
-        payload = json.dumps({"buzzword_density": 8, "claim_proof_ratio": 9,
-                               "technical_coherence": 7, "red_flags": ["no weights"]})
+        payload = json.dumps(
+            {
+                "buzzword_density": 8,
+                "claim_proof_ratio": 9,
+                "technical_coherence": 7,
+                "red_flags": ["no weights"],
+            }
+        )
         fetcher = self._fetcher(payload)
-        result = fetcher.fetch({"readme": "test", "slug": "x/y", "stars": 100, "topics": []})
+        result = fetcher.fetch(
+            {"readme": "test", "slug": "x/y", "stars": 100, "topics": []}
+        )
         assert result["llm_analysis"]["buzzword_density"] == 8
 
     def test_handles_json_in_markdown_fence(self):
@@ -78,6 +94,7 @@ class TestLLMFetcher:
 
 # ── Content Analyzer ──────────────────────────────────────────────────────────
 
+
 def _content_config() -> HeuristicConfig:
     return HeuristicConfig(
         id="readme_llm_analysis",
@@ -87,7 +104,11 @@ def _content_config() -> HeuristicConfig:
         thresholds={"skip_if_missing": True},
         scoring=ScoringConfig(
             method="weighted_average",
-            weights={"buzzword_density": 0.3, "claim_proof_ratio": 0.4, "technical_coherence": 0.3},
+            weights={
+                "buzzword_density": 0.3,
+                "claim_proof_ratio": 0.4,
+                "technical_coherence": 0.3,
+            },
         ),
         evidence_template="Red flags: {red_flags} ({buzzword_density} {claim_proof_ratio} {technical_coherence})",
     )
@@ -104,20 +125,38 @@ class TestContentAnalyzer:
         assert result.score == 0.0
 
     def test_high_scores_trigger(self):
-        data = {"llm_analysis": {"buzzword_density": 9, "claim_proof_ratio": 10,
-                                  "technical_coherence": 9, "red_flags": ["impossible claim"]}}
+        data = {
+            "llm_analysis": {
+                "buzzword_density": 9,
+                "claim_proof_ratio": 10,
+                "technical_coherence": 9,
+                "red_flags": ["impossible claim"],
+            }
+        }
         result = self.analyzer.analyze(self.config, data)
         assert result.triggered
         assert result.score > 50
 
     def test_low_scores_clean(self):
-        data = {"llm_analysis": {"buzzword_density": 1, "claim_proof_ratio": 1,
-                                  "technical_coherence": 0, "red_flags": []}}
+        data = {
+            "llm_analysis": {
+                "buzzword_density": 1,
+                "claim_proof_ratio": 1,
+                "technical_coherence": 0,
+                "red_flags": [],
+            }
+        }
         result = self.analyzer.analyze(self.config, data)
         assert not result.triggered
 
     def test_red_flags_in_evidence(self):
-        data = {"llm_analysis": {"buzzword_density": 9, "claim_proof_ratio": 10,
-                                  "technical_coherence": 9, "red_flags": ["no weights", "Telegram upsell"]}}
+        data = {
+            "llm_analysis": {
+                "buzzword_density": 9,
+                "claim_proof_ratio": 10,
+                "technical_coherence": 9,
+                "red_flags": ["no weights", "Telegram upsell"],
+            }
+        }
         result = self.analyzer.analyze(self.config, data)
         assert "no weights" in result.evidence

@@ -16,10 +16,18 @@ def _config(heuristic_id: str, thresholds: dict) -> HeuristicConfig:
     )
 
 
-def _make_sample(n: int, days_ago: int = 0, followers: int = 0, repos: int = 0) -> list[dict]:
+def _make_sample(
+    n: int, days_ago: int = 0, followers: int = 0, repos: int = 0
+) -> list[dict]:
     base = datetime.now(UTC) - timedelta(days=days_ago)
     return [
-        {"login": f"u{i}", "starred_at": base, "followers": followers, "public_repos": repos, "created_at": base}
+        {
+            "login": f"u{i}",
+            "starred_at": base,
+            "followers": followers,
+            "public_repos": repos,
+            "created_at": base,
+        }
         for i in range(n)
     ]
 
@@ -42,17 +50,19 @@ class TestSocialAnalyzer:
         assert not result.triggered
 
     def test_low_activity_stargazers_triggered(self):
-        config = _config("low_activity_stargazers", {
-            "max_public_repos": 2, "max_followers": 0, "min_suspicious_ratio": 0.4
-        })
+        config = _config(
+            "low_activity_stargazers",
+            {"max_public_repos": 2, "max_followers": 0, "min_suspicious_ratio": 0.4},
+        )
         data = {"stargazers_sample": _make_sample(10, followers=0, repos=0)}
         result = self.analyzer.analyze(config, data)
         assert result.triggered
 
     def test_low_activity_stargazers_clean(self):
-        config = _config("low_activity_stargazers", {
-            "max_public_repos": 2, "max_followers": 0, "min_suspicious_ratio": 0.4
-        })
+        config = _config(
+            "low_activity_stargazers",
+            {"max_public_repos": 2, "max_followers": 0, "min_suspicious_ratio": 0.4},
+        )
         data = {"stargazers_sample": _make_sample(10, followers=50, repos=20)}
         result = self.analyzer.analyze(config, data)
         assert not result.triggered
@@ -72,7 +82,11 @@ class TestStarsVelocity:
             category="social_signals",
             weight=1.0,
             severity="high",
-            thresholds={"spike_ratio": 10, "spike_window_days": 3, "min_stars_to_trigger": 500},
+            thresholds={
+                "spike_ratio": 10,
+                "spike_window_days": 3,
+                "min_stars_to_trigger": 500,
+            },
             scoring=ScoringConfig(score_if_triggered=75, score_if_clean=0),
             evidence_template="{spike_stars} {spike_days} {avg_stars_per_day}",
         )
@@ -84,7 +98,14 @@ class TestStarsVelocity:
         for days_ago, count in counts_by_days_ago:
             ts = now - timedelta(days=days_ago)
             for _ in range(count):
-                sample.append({"starred_at": ts, "followers": 5, "public_repos": 10, "created_at": ts})
+                sample.append(
+                    {
+                        "starred_at": ts,
+                        "followers": 5,
+                        "public_repos": 10,
+                        "created_at": ts,
+                    }
+                )
         return sample
 
     def test_triggered_spike(self):

@@ -41,7 +41,10 @@ class TestMetadataAnalyzer:
         assert not result.triggered
 
     def test_commit_burst_triggered(self):
-        config = _config("commit_burst", {"max_repo_age_days": 14, "min_commits": 5, "min_dormant_days": 60})
+        config = _config(
+            "commit_burst",
+            {"max_repo_age_days": 14, "min_commits": 5, "min_dormant_days": 60},
+        )
         data = {
             "created_at": now - timedelta(days=80),
             "pushed_at": now - timedelta(days=70),  # dormant 70 days
@@ -51,7 +54,10 @@ class TestMetadataAnalyzer:
         assert result.triggered
 
     def test_commit_burst_clean_recent_push(self):
-        config = _config("commit_burst", {"max_repo_age_days": 14, "min_commits": 5, "min_dormant_days": 60})
+        config = _config(
+            "commit_burst",
+            {"max_repo_age_days": 14, "min_commits": 5, "min_dormant_days": 60},
+        )
         data = {
             "created_at": now - timedelta(days=10),
             "pushed_at": now - timedelta(days=1),  # active

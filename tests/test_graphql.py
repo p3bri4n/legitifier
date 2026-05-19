@@ -6,6 +6,7 @@ from legitifier_pkg.fetchers.graphql import GraphQLStargazerFetcher
 
 def _make_edge(login: str, days_ago: int, followers: int = 5, repos: int = 10) -> dict:
     from datetime import timedelta
+
     ts = (datetime.now(UTC) - timedelta(days=days_ago)).isoformat()
     return {
         "starredAt": ts,
@@ -14,17 +15,19 @@ def _make_edge(login: str, days_ago: int, followers: int = 5, repos: int = 10) -
             "followers": {"totalCount": followers},
             "repositories": {"totalCount": repos},
             "createdAt": (datetime.now(UTC) - timedelta(days=365)).isoformat(),
-        }
+        },
     }
 
 
-def _mock_response(edges: list[dict], has_next: bool = False, cursor: str = "abc") -> dict:
+def _mock_response(
+    edges: list[dict], has_next: bool = False, cursor: str = "abc"
+) -> dict:
     return {
         "data": {
             "repository": {
                 "stargazers": {
                     "edges": edges,
-                    "pageInfo": {"endCursor": cursor, "hasNextPage": has_next}
+                    "pageInfo": {"endCursor": cursor, "hasNextPage": has_next},
                 }
             }
         }

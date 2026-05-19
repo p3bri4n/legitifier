@@ -17,8 +17,10 @@ def _find_seed() -> Path:
     # Try relative to this file (source tree: legitifier_pkg/data/loader.py → data/seed.jsonl)
     candidates = [
         Path(__file__).parents[3] / "data" / "seed.jsonl",  # source: project root
-        Path(__file__).parents[2] / "data" / "seed.jsonl",  # installed under legitifier_pkg
-        Path(__file__).parent / "seed.jsonl",                # bundled alongside loader.py
+        Path(__file__).parents[2]
+        / "data"
+        / "seed.jsonl",  # installed under legitifier_pkg
+        Path(__file__).parent / "seed.jsonl",  # bundled alongside loader.py
     ]
     for path in candidates:
         if path.exists():
@@ -74,10 +76,14 @@ class ReputationStore:
             ).fetchall()
         for row in rows:
             entry = ReputationEntry(
-                type=row[0], login=row[1], slug=row[2],
+                type=row[0],
+                login=row[1],
+                slug=row[2],
                 verdict=ReputationVerdict(row[3]),
                 confidence=ReputationConfidence(row[4]),
-                source=row[5], note=row[6], added=row[7],
+                source=row[5],
+                note=row[6],
+                added=row[7],
             )
             self._entries.setdefault(entry.key, []).append(entry)
 

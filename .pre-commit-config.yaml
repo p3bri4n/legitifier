@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: validate-seed
+        name: Validate seed.jsonl
+        entry: python scripts/validate_seed.py
+        language: system
+        pass_filenames: false
+        files: ^data/seed\.jsonl$

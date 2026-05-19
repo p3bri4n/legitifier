@@ -13,7 +13,9 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
         handler = getattr(self, f"_handle_{config.id}", self._handle_unknown)
         return handler(config, data)
 
-    def _handle_abandoned_takeover(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_abandoned_takeover(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         timeline: list[dict] = data.get("commit_timeline", [])
         created_at: datetime | None = data.get("created_at")
 
@@ -37,8 +39,10 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
         counts = {entry["month"]: entry["count"] for entry in timeline}
         months = sorted(counts)
 
-        dormant_months, burst_commits, burst_months_found = self._find_dormancy_then_burst(
-            months, counts, min_dormant, burst_window, min_burst_commits
+        dormant_months, burst_commits, burst_months_found = (
+            self._find_dormancy_then_burst(
+                months, counts, min_dormant, burst_window, min_burst_commits
+            )
         )
 
         triggered = dormant_months >= min_dormant and burst_commits >= min_burst_commits
@@ -48,7 +52,11 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
             "burst_months": burst_months_found,
             "repo_age_days": repo_age_days,
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         evidence = (
             self._render_evidence(config.evidence_template, context)
             if triggered
@@ -85,12 +93,17 @@ class RepoHistoryAnalyzer(BaseAnalyzer):
             if dormant < min_dormant:
                 continue
             # Count commits in burst_window months after dormancy
-            burst = sum(counts.get(months[k], 0) for k in range(j, min(j + burst_window, len(months))))
+            burst = sum(
+                counts.get(months[k], 0)
+                for k in range(j, min(j + burst_window, len(months)))
+            )
             if dormant > best[0] or (dormant == best[0] and burst > best[1]):
                 best = (dormant, burst, burst_window)
         return best
 
-    def _handle_unknown(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_unknown(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         return self._clean_result(config)
 
     def _clean_result(self, config: HeuristicConfig) -> HeuristicResult:

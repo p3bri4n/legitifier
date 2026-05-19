@@ -6,6 +6,7 @@ Usage:
     python scripts/bump_version.py           # bump to current datetime
     python scripts/bump_version.py --dry-run # preview without writing
 """
+
 from __future__ import annotations
 
 import argparse
@@ -52,6 +53,8 @@ def bump(dry_run: bool = False) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview without writing"
+    )
     args = parser.parse_args()
     bump(dry_run=args.dry_run)

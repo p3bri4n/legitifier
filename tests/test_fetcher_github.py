@@ -1,4 +1,5 @@
 """Unit tests for GitHubFetcher (httpx-based)."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -30,10 +31,13 @@ def _mock_resp(data, status=200, headers=None):
 class TestSlug:
     def test_full_url(self):
         assert GitHubFetcher._slug("https://github.com/owner/repo") == "owner/repo"
+
     def test_without_protocol(self):
         assert GitHubFetcher._slug("github.com/owner/repo") == "owner/repo"
+
     def test_trailing_slash(self):
         assert GitHubFetcher._slug("https://github.com/owner/repo/") == "owner/repo"
+
     def test_slug_passthrough(self):
         assert GitHubFetcher._slug("owner/repo") == "owner/repo"
 
@@ -42,10 +46,13 @@ class TestParseDate:
     def test_iso_format(self):
         dt = _parse_dt("2024-01-15T10:30:00Z")
         assert isinstance(dt, datetime) and dt.tzinfo is not None
+
     def test_none_input(self):
         assert _parse_dt(None) is None
+
     def test_empty_string(self):
         assert _parse_dt("") is None
+
     def test_invalid_format(self):
         assert _parse_dt("not-a-date") is None
 
@@ -53,6 +60,7 @@ class TestParseDate:
 class TestReadme:
     def test_returns_decoded_content(self, fetcher):
         import base64
+
         content = base64.b64encode(b"# Hello World").decode()
         fetcher._get = MagicMock(return_value={"content": content})
         assert "Hello World" in fetcher._readme("owner/repo")
@@ -74,8 +82,12 @@ class TestTopics:
 
 class TestRecentCommitCount:
     def test_uses_link_header(self, fetcher):
-        resp = _mock_resp([{"sha": "abc"}],
-                          headers={"Link": '<https://api.github.com/repos/o/r/commits?page=42>; rel="last"'})
+        resp = _mock_resp(
+            [{"sha": "abc"}],
+            headers={
+                "Link": '<https://api.github.com/repos/o/r/commits?page=42>; rel="last"'
+            },
+        )
         fetcher._http.get.return_value = resp
         assert fetcher._recent_commit_count("owner/repo") == 42
 
@@ -96,10 +108,18 @@ class TestRecentCommitCount:
 
 class TestRecentPRs:
     def test_returns_list(self, fetcher):
-        fetcher._get = MagicMock(return_value=[
-            {"number": 1, "title": "Fix", "created_at": "2024-01-01T00:00:00Z",
-             "merged_at": "2024-01-02T00:00:00Z", "comments": 3, "user": {"login": "dev"}},
-        ])
+        fetcher._get = MagicMock(
+            return_value=[
+                {
+                    "number": 1,
+                    "title": "Fix",
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "merged_at": "2024-01-02T00:00:00Z",
+                    "comments": 3,
+                    "user": {"login": "dev"},
+                },
+            ]
+        )
         result = fetcher._recent_prs("owner/repo")
         assert len(result) == 1 and result[0]["merged"] is True
 
@@ -110,11 +130,13 @@ class TestRecentPRs:
 
 class TestCommitTimeline:
     def test_groups_by_month(self, fetcher):
-        fetcher._get = MagicMock(return_value=[
-            {"commit": {"author": {"date": "2024-01-15T10:00:00Z"}}},
-            {"commit": {"author": {"date": "2024-01-20T10:00:00Z"}}},
-            {"commit": {"author": {"date": "2024-02-05T10:00:00Z"}}},
-        ])
+        fetcher._get = MagicMock(
+            return_value=[
+                {"commit": {"author": {"date": "2024-01-15T10:00:00Z"}}},
+                {"commit": {"author": {"date": "2024-01-20T10:00:00Z"}}},
+                {"commit": {"author": {"date": "2024-02-05T10:00:00Z"}}},
+            ]
+        )
         result = fetcher._commit_timeline("owner/repo")
         months = {r["month"]: r["count"] for r in result}
         assert months.get("2024-01") == 2 and months.get("2024-02") == 1

@@ -16,7 +16,9 @@ _TIMEOUT = httpx.Timeout(15.0)
 
 
 class GitHubFetcher:
-    def __init__(self, token: str | None = None, cache: FetchCache | None = None) -> None:
+    def __init__(
+        self, token: str | None = None, cache: FetchCache | None = None
+    ) -> None:
         self._token = token
         self._cache = cache or FetchCache()
         self._gql = GraphQLStargazerFetcher(token) if token else None
@@ -26,7 +28,9 @@ class GitHubFetcher:
         }
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        self._http = httpx.Client(headers=headers, timeout=_TIMEOUT, follow_redirects=True)
+        self._http = httpx.Client(
+            headers=headers, timeout=_TIMEOUT, follow_redirects=True
+        )
 
     def _get(self, path: str, params: dict | None = None) -> Any:
         resp = self._http.get(f"{_API}{path}", params=params)
@@ -46,15 +50,20 @@ class GitHubFetcher:
         owner_login = repo["owner"]["login"]
 
         with ThreadPoolExecutor(max_workers=6) as pool:
-            f_owner    = pool.submit(self._owner, owner_login)
-            f_readme   = pool.submit(self._readme, slug)
-            f_topics   = pool.submit(self._topics, slug)
-            f_stars    = pool.submit(self._stargazers_sample, slug, repo["stargazers_count"])
-            f_prs      = pool.submit(self._recent_prs, slug)
-            f_commits  = pool.submit(self._recent_commit_count, slug)
+            f_owner = pool.submit(self._owner, owner_login)
+            f_readme = pool.submit(self._readme, slug)
+            f_topics = pool.submit(self._topics, slug)
+            f_stars = pool.submit(
+                self._stargazers_sample, slug, repo["stargazers_count"]
+            )
+            f_prs = pool.submit(self._recent_prs, slug)
+            f_commits = pool.submit(self._recent_commit_count, slug)
             f_timeline = pool.submit(self._commit_timeline, slug)
-            f_snippets = pool.submit(self._code_snippets, slug,
-                                     [".py", ".js", ".ts", ".go", ".rs", ".java", ".txt", ".toml"])
+            f_snippets = pool.submit(
+                self._code_snippets,
+                slug,
+                [".py", ".js", ".ts", ".go", ".rs", ".java", ".txt", ".toml"],
+            )
 
         owner = f_owner.result()
 
@@ -92,7 +101,9 @@ class GitHubFetcher:
     def _readme(self, slug: str) -> str:
         try:
             data = self._get(f"/repos/{slug}/readme")
-            return base64.b64decode(data["content"].replace("\n", "")).decode("utf-8", errors="replace")
+            return base64.b64decode(data["content"].replace("\n", "")).decode(
+                "utf-8", errors="replace"
+            )
         except Exception:
             return ""
 
@@ -105,6 +116,7 @@ class GitHubFetcher:
 
     def _recent_commit_count(self, slug: str, days: int = 30) -> int:
         import re
+
         since = (datetime.now(UTC) - timedelta(days=days)).isoformat()
         try:
             resp = self._http.get(
@@ -193,9 +205,15 @@ class GitHubFetcher:
 
     def _recent_prs(self, slug: str, limit: int = 20) -> list[dict[str, Any]]:
         try:
-            items = self._get(f"/repos/{slug}/pulls",
-                              params={"state": "all", "sort": "created",
-                                      "direction": "desc", "per_page": limit})
+            items = self._get(
+                f"/repos/{slug}/pulls",
+                params={
+                    "state": "all",
+                    "sort": "created",
+                    "direction": "desc",
+                    "per_page": limit,
+                },
+            )
             return [
                 {
                     "number": pr["number"],
@@ -227,7 +245,9 @@ class GitHubFetcher:
             pass
         return [{"month": k, "count": v} for k, v in sorted(counts.items())]
 
-    def _code_snippets(self, slug: str, extensions: list[str], max_files: int = 20) -> list[dict[str, str]]:
+    def _code_snippets(
+        self, slug: str, extensions: list[str], max_files: int = 20
+    ) -> list[dict[str, str]]:
         snippets = []
 
         def _check_dir(d: str) -> str | None:
@@ -246,16 +266,24 @@ class GitHubFetcher:
             if len(snippets) >= max_files:
                 break
             try:
-                path = f"/repos/{slug}/contents/{dir_path}" if dir_path else f"/repos/{slug}/contents"
+                path = (
+                    f"/repos/{slug}/contents/{dir_path}"
+                    if dir_path
+                    else f"/repos/{slug}/contents"
+                )
                 items = self._get(path)
                 if not isinstance(items, list):
                     continue
                 for item in items:
                     if len(snippets) >= max_files:
                         break
-                    if item.get("type") == "file" and any(item["name"].endswith(ext) for ext in extensions):
+                    if item.get("type") == "file" and any(
+                        item["name"].endswith(ext) for ext in extensions
+                    ):
                         try:
-                            file_data = self._get(f"/repos/{slug}/contents/{item['path']}")
+                            file_data = self._get(
+                                f"/repos/{slug}/contents/{item['path']}"
+                            )
                             content = base64.b64decode(
                                 file_data["content"].replace("\n", "")
                             ).decode("utf-8", errors="replace")

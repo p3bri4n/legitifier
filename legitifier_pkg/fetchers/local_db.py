@@ -17,7 +17,9 @@ class LocalDBFetcher:
       contributor_reputation:   {score, flagged_logins, sample_size}
     """
 
-    def __init__(self, store: ReputationStore | None = None, db_path: Path | None = None) -> None:
+    def __init__(
+        self, store: ReputationStore | None = None, db_path: Path | None = None
+    ) -> None:
         self._store = store or ReputationStore(db_path=db_path)
 
     def fetch(self, data: dict[str, Any]) -> dict[str, Any]:
@@ -52,8 +54,13 @@ class LocalDBFetcher:
         for login in logins:
             entry = self._store.lookup(login)
             if entry and entry.verdict.value in ("SCAM", "SUSPICIOUS"):
-                flagged.append({"login": login, "verdict": entry.verdict.value,
-                                "confidence": entry.confidence.value})
+                flagged.append(
+                    {
+                        "login": login,
+                        "verdict": entry.verdict.value,
+                        "confidence": entry.confidence.value,
+                    }
+                )
 
         # Score proportional to ratio of flagged contributors
         ratio = len(flagged) / len(logins) if logins else 0.0

@@ -36,12 +36,14 @@ def render(report: ScanReport) -> None:
     duration = f"{report.scan_duration_seconds:.1f}s"
 
     if report.verdict == Verdict.UNKNOWN:
-        console.print(Panel(
-            f"{icon} [bold {color}]UNKNOWN[/] — Repository not found or inaccessible\n"
-            f"[dim]{report.repo_url}[/]  [dim]({duration})[/]",
-            title="[bold]legitifier[/]",
-            border_style=color,
-        ))
+        console.print(
+            Panel(
+                f"{icon} [bold {color}]UNKNOWN[/] — Repository not found or inaccessible\n"
+                f"[dim]{report.repo_url}[/]  [dim]({duration})[/]",
+                title="[bold]legitifier[/]",
+                border_style=color,
+            )
+        )
         if report.errors:
             console.print(f"[yellow]Error:[/] {report.errors[0]}")
         return
@@ -50,13 +52,15 @@ def render(report: ScanReport) -> None:
     triggered = [r for r in report.results if r.triggered]
     total = len(report.results)
 
-    console.print(Panel(
-        f"{icon} [bold {color}]{report.verdict.value}[/] — Trust: [bold]{trust:.0f}/100[/]  "
-        f"[dim]({len(triggered)}/{total} signals • {duration} • v{report.scanner_version})[/]\n"
-        f"[dim]{report.repo_url}[/]",
-        title="[bold]legitifier[/]",
-        border_style=color,
-    ))
+    console.print(
+        Panel(
+            f"{icon} [bold {color}]{report.verdict.value}[/] — Trust: [bold]{trust:.0f}/100[/]  "
+            f"[dim]({len(triggered)}/{total} signals • {duration} • v{report.scanner_version})[/]\n"
+            f"[dim]{report.repo_url}[/]",
+            title="[bold]legitifier[/]",
+            border_style=color,
+        )
+    )
 
     if triggered:
         table = Table(box=box.SIMPLE, show_header=True, header_style="bold cyan")
@@ -66,7 +70,12 @@ def render(report: ScanReport) -> None:
         table.add_column("Evidence")
 
         for r in sorted(triggered, key=lambda x: x.score, reverse=True):
-            sev_color = {"low": "green", "medium": "yellow", "high": "orange3", "critical": "red"}
+            sev_color = {
+                "low": "green",
+                "medium": "yellow",
+                "high": "orange3",
+                "critical": "red",
+            }
             c = sev_color.get(r.severity.value, "white")
             table.add_row(
                 f"🚩 {r.heuristic_id}",

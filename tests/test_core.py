@@ -46,7 +46,9 @@ class TestScorer:
 
     def test_scam_verdict(self):
         scorer = Scorer()
-        report = scorer.aggregate("https://github.com/x/y", [self._result(90, "critical")], [])
+        report = scorer.aggregate(
+            "https://github.com/x/y", [self._result(90, "critical")], []
+        )
         assert report.verdict == Verdict.SCAM
 
     def test_empty_results(self):
@@ -56,7 +58,9 @@ class TestScorer:
 
     def test_whitelist_caps_score(self):
         scorer = Scorer()
-        report = scorer.aggregate("url", [self._result(90, "critical")], [], whitelisted=True)
+        report = scorer.aggregate(
+            "url", [self._result(90, "critical")], [], whitelisted=True
+        )
         assert report.risk_score == 49.0
         assert report.verdict == Verdict.SUSPICIOUS
         assert any("whitelisted" in e for e in report.errors)

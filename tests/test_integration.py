@@ -2,6 +2,7 @@
 
 GitHubFetcher is mocked — no real API calls.
 """
+
 from __future__ import annotations
 
 import json
@@ -40,16 +41,35 @@ def _legit_data() -> dict:
         "default_branch": "main",
         "commit_count": 25,
         "stargazers_sample": [
-            {"starred_at": now - timedelta(days=i * 3), "followers": 10, "public_repos": 15, "created_at": now - timedelta(days=300)}
+            {
+                "starred_at": now - timedelta(days=i * 3),
+                "followers": 10,
+                "public_repos": 15,
+                "created_at": now - timedelta(days=300),
+            }
             for i in range(50)
         ],
-        "code_snippets": [{"path": "model.py", "content": "import torch\nmodel = AutoModel.from_pretrained('bert-base')"}],
+        "code_snippets": [
+            {
+                "path": "model.py",
+                "content": "import torch\nmodel = AutoModel.from_pretrained('bert-base')",
+            }
+        ],
         "recent_prs": [
-            {"title": "Add feature X", "created_at": now - timedelta(days=i * 5), "merged": True, "comments": 4,
-             "user_followers": 20, "user_public_repos": 12, "user_created_at": now - timedelta(days=400)}
+            {
+                "title": "Add feature X",
+                "created_at": now - timedelta(days=i * 5),
+                "merged": True,
+                "comments": 4,
+                "user_followers": 20,
+                "user_public_repos": 12,
+                "user_created_at": now - timedelta(days=400),
+            }
             for i in range(5)
         ],
-        "commit_timeline": [{"month": f"2024-{i:02d}", "count": 8} for i in range(1, 13)],
+        "commit_timeline": [
+            {"month": f"2024-{i:02d}", "count": 8} for i in range(1, 13)
+        ],
     }
 
 
@@ -72,19 +92,36 @@ def _scam_data() -> dict:
         "default_branch": "main",
         "commit_count": 0,
         "stargazers_sample": [
-            {"starred_at": now - timedelta(days=2), "followers": 0, "public_repos": 0, "created_at": now - timedelta(days=10)}
+            {
+                "starred_at": now - timedelta(days=2),
+                "followers": 0,
+                "public_repos": 0,
+                "created_at": now - timedelta(days=10),
+            }
             for _ in range(80)
-        ] + [
-            {"starred_at": now - timedelta(days=20), "followers": 5, "public_repos": 8, "created_at": now - timedelta(days=300)}
+        ]
+        + [
+            {
+                "starred_at": now - timedelta(days=20),
+                "followers": 5,
+                "public_repos": 8,
+                "created_at": now - timedelta(days=300),
+            }
             for _ in range(20)
         ],
-        "code_snippets": [{"path": "main.py", "content": "from openai import OpenAI\nclient = OpenAI(api_key='sk-...')"}],
+        "code_snippets": [
+            {
+                "path": "main.py",
+                "content": "from openai import OpenAI\nclient = OpenAI(api_key='sk-...')",
+            }
+        ],
         "recent_prs": [],
         "commit_timeline": [],
     }
 
 
 # ── Pipeline tests ─────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def store(tmp_path):
@@ -144,13 +181,24 @@ class TestPipeline:
         report, _ = pipeline.run("github.com/fake/wormgpt")
         heuristic_ids = {r.heuristic_id for r in report.results}
         expected = {
-            "stars_velocity", "fork_ratio", "low_activity_stargazers",
-            "ai_prs", "contributor_reputation", "watcher_to_star_ratio",
-            "account_age", "commit_burst", "no_activity", "owner_reputation",
-            "abandoned_takeover", "api_disguised_as_local",
-            "hardcoded_secrets", "requirements_chaos",
-            "test_coverage_signals", "documentation_quality",
-            "readme_llm_analysis", "telegram_funnel",
+            "stars_velocity",
+            "fork_ratio",
+            "low_activity_stargazers",
+            "ai_prs",
+            "contributor_reputation",
+            "watcher_to_star_ratio",
+            "account_age",
+            "commit_burst",
+            "no_activity",
+            "owner_reputation",
+            "abandoned_takeover",
+            "api_disguised_as_local",
+            "hardcoded_secrets",
+            "requirements_chaos",
+            "test_coverage_signals",
+            "documentation_quality",
+            "readme_llm_analysis",
+            "telegram_funnel",
         }
         assert expected == heuristic_ids
 
@@ -163,6 +211,7 @@ class TestPipeline:
 
 # ── Export tests ───────────────────────────────────────────────────────────────
 
+
 class TestExport:
     def test_export_empty(self, store, tmp_path):
         output = tmp_path / "out.jsonl"
@@ -172,7 +221,13 @@ class TestExport:
 
     def test_export_with_feedback(self, store, tmp_path):
         from legitifier_pkg.core.models import ScanReport
-        report = ScanReport(repo_url="https://github.com/x/y", risk_score=80.0, verdict=Verdict.SCAM, results=[])
+
+        report = ScanReport(
+            repo_url="https://github.com/x/y",
+            risk_score=80.0,
+            verdict=Verdict.SCAM,
+            results=[],
+        )
         scan_id = store.save_scan(report)
         store.save_feedback(scan_id, Verdict.SCAM, Confidence.CERTAIN, "obvious fake")
 
@@ -189,8 +244,14 @@ class TestExport:
 
     def test_export_multiple_records(self, store, tmp_path):
         from legitifier_pkg.core.models import ScanReport
+
         for i in range(3):
-            report = ScanReport(repo_url=f"https://github.com/x/repo{i}", risk_score=60.0, verdict=Verdict.LIKELY_SCAM, results=[])
+            report = ScanReport(
+                repo_url=f"https://github.com/x/repo{i}",
+                risk_score=60.0,
+                verdict=Verdict.LIKELY_SCAM,
+                results=[],
+            )
             scan_id = store.save_scan(report)
             store.save_feedback(scan_id, Verdict.LIKELY_SCAM)
 

@@ -2,6 +2,7 @@
 Realistic GitHub repo data fixtures for heuristic testing.
 Each fixture returns a dict matching GitHubFetcher.fetch() output exactly.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -9,27 +10,59 @@ from datetime import UTC, datetime, timedelta
 now = datetime.now(UTC)
 
 
-def _stargazers(n: int, followers: int = 5, repos: int = 10,
-                account_age_days: int = 500, days_ago: int = 30) -> list[dict]:
+def _stargazers(
+    n: int,
+    followers: int = 5,
+    repos: int = 10,
+    account_age_days: int = 500,
+    days_ago: int = 30,
+) -> list[dict]:
     base = now - timedelta(days=days_ago)
     created = now - timedelta(days=account_age_days)
-    return [{"login": f"user{i}", "starred_at": base, "followers": followers,
-             "public_repos": repos, "created_at": created} for i in range(n)]
+    return [
+        {
+            "login": f"user{i}",
+            "starred_at": base,
+            "followers": followers,
+            "public_repos": repos,
+            "created_at": created,
+        }
+        for i in range(n)
+    ]
 
 
 def _bought_stargazers(n: int) -> list[dict]:
     """Aged accounts (>365 days) but completely empty — purchased profile pattern."""
     created = now - timedelta(days=800)  # old account
-    return [{"login": f"ghost{i}", "starred_at": now - timedelta(days=5),
-             "followers": 0, "public_repos": 0, "created_at": created} for i in range(n)]
+    return [
+        {
+            "login": f"ghost{i}",
+            "starred_at": now - timedelta(days=5),
+            "followers": 0,
+            "public_repos": 0,
+            "created_at": created,
+        }
+        for i in range(n)
+    ]
 
 
-def _pr(days_ago: int = 10, merged: bool = False, comments: int = 0,
-        followers: int = 0, repos: int = 1) -> dict:
-    return {"title": "fix: update", "created_at": now - timedelta(days=days_ago),
-            "merged": merged, "comments": comments, "user_login": f"pr_user_{days_ago}",
-            "user_followers": followers, "user_public_repos": repos,
-            "user_created_at": now - timedelta(days=30)}
+def _pr(
+    days_ago: int = 10,
+    merged: bool = False,
+    comments: int = 0,
+    followers: int = 0,
+    repos: int = 1,
+) -> dict:
+    return {
+        "title": "fix: update",
+        "created_at": now - timedelta(days=days_ago),
+        "merged": merged,
+        "comments": comments,
+        "user_login": f"pr_user_{days_ago}",
+        "user_followers": followers,
+        "user_public_repos": repos,
+        "user_created_at": now - timedelta(days=30),
+    }
 
 
 def _timeline(monthly_counts: list[tuple[str, int]]) -> list[dict]:
@@ -37,6 +70,7 @@ def _timeline(monthly_counts: list[tuple[str, int]]) -> list[dict]:
 
 
 # ── Legitimate repos ──────────────────────────────────────────────────────────
+
 
 def legit_popular_repo() -> dict:
     """Healthy, popular open-source project — should score CLEAN."""
@@ -56,9 +90,19 @@ def legit_popular_repo() -> dict:
         "license": "MIT",
         "default_branch": "main",
         "commit_count": 30,
-        "stargazers_sample": _stargazers(60, followers=15, repos=12, account_age_days=1500),
-        "code_snippets": [{"path": "model.py", "content": "import torch\nclass Model(nn.Module): pass"}],
-        "recent_prs": [_pr(i * 5, merged=True, comments=4, followers=20, repos=15) for i in range(5)],
+        "stargazers_sample": _stargazers(
+            60, followers=15, repos=12, account_age_days=1500
+        ),
+        "code_snippets": [
+            {
+                "path": "model.py",
+                "content": "import torch\nclass Model(nn.Module): pass",
+            }
+        ],
+        "recent_prs": [
+            _pr(i * 5, merged=True, comments=4, followers=20, repos=15)
+            for i in range(5)
+        ],
         "commit_timeline": _timeline([(f"2024-{i:02d}", 8) for i in range(1, 13)]),
     }
 
@@ -81,7 +125,9 @@ def legit_small_repo() -> dict:
         "license": "MIT",
         "default_branch": "main",
         "commit_count": 12,
-        "stargazers_sample": _stargazers(60, followers=8, repos=10, account_age_days=900),
+        "stargazers_sample": _stargazers(
+            60, followers=8, repos=10, account_age_days=900
+        ),
         "code_snippets": [{"path": "main.py", "content": "def run(): pass"}],
         "recent_prs": [_pr(30, merged=True, comments=2)],
         "commit_timeline": _timeline([(f"2024-{i:02d}", 4) for i in range(1, 13)]),
@@ -89,6 +135,7 @@ def legit_small_repo() -> dict:
 
 
 # ── Scam / suspicious repos ───────────────────────────────────────────────────
+
 
 def bought_stars_repo() -> dict:
     """
@@ -98,9 +145,9 @@ def bought_stars_repo() -> dict:
     return {
         "slug": "startup/hot-ai-tool",
         "stars": 8000,
-        "forks": 90,         # ratio 0.011 — well below 0.03 threshold
+        "forks": 90,  # ratio 0.011 — well below 0.03 threshold
         "open_issues": 3,
-        "watchers": 10,      # ratio 0.00125 — below 0.002 threshold, under 10k stars
+        "watchers": 10,  # ratio 0.00125 — below 0.002 threshold, under 10k stars
         "created_at": now - timedelta(days=500),  # old enough for fork_ratio
         "pushed_at": now - timedelta(days=5),
         "owner_created_at": now - timedelta(days=350),
@@ -112,8 +159,8 @@ def bought_stars_repo() -> dict:
         "default_branch": "main",
         "commit_count": 3,
         "stargazers_sample": (
-            _bought_stargazers(45) +           # 75% aged-but-empty
-            _stargazers(15, followers=5, repos=8)  # 25% real
+            _bought_stargazers(45)  # 75% aged-but-empty
+            + _stargazers(15, followers=5, repos=8)  # 25% real
         ),
         "code_snippets": [{"path": "app.py", "content": "print('hello')"}],
         "recent_prs": [],
@@ -142,9 +189,15 @@ def api_wrapper_repo() -> dict:
         "license": None,
         "default_branch": "main",
         "commit_count": 0,
-        "stargazers_sample": _stargazers(60, followers=0, repos=0, account_age_days=400),
-        "code_snippets": [{"path": "main.py",
-                           "content": "from openai import OpenAI\nclient = OpenAI(api_key='sk-...')"}],
+        "stargazers_sample": _stargazers(
+            60, followers=0, repos=0, account_age_days=400
+        ),
+        "code_snippets": [
+            {
+                "path": "main.py",
+                "content": "from openai import OpenAI\nclient = OpenAI(api_key='sk-...')",
+            }
+        ],
         "recent_prs": [],
         "commit_timeline": _timeline([("2024-11", 3)]),
     }
@@ -158,9 +211,9 @@ def empty_readme_repo() -> dict:
     return {
         "slug": "vibe/wifi-densepose-clone",
         "stars": 8500,
-        "forks": 95,         # ratio 0.011
+        "forks": 95,  # ratio 0.011
         "open_issues": 0,
-        "watchers": 8,       # ratio 0.001
+        "watchers": 8,  # ratio 0.001
         "created_at": now - timedelta(days=500),  # old enough for fork_ratio
         "pushed_at": now - timedelta(days=180),
         "owner_created_at": now - timedelta(days=210),
@@ -176,11 +229,14 @@ def empty_readme_repo() -> dict:
         "default_branch": "main",
         "commit_count": 0,
         "stargazers_sample": (
-            _bought_stargazers(50) +
-            _stargazers(10, followers=3, repos=5)
+            _bought_stargazers(50) + _stargazers(10, followers=3, repos=5)
         ),
-        "code_snippets": [{"path": "demo.py",
-                           "content": "import numpy as np\ndata = np.random.randn(100)\nprint(data.mean())"}],
+        "code_snippets": [
+            {
+                "path": "demo.py",
+                "content": "import numpy as np\ndata = np.random.randn(100)\nprint(data.mean())",
+            }
+        ],
         "recent_prs": [],
         "commit_timeline": _timeline([("2024-10", 2), ("2024-11", 1)]),
     }
@@ -207,21 +263,40 @@ def abandoned_takeover_repo() -> dict:
         "license": "MIT",
         "default_branch": "main",
         "commit_count": 20,
-        "stargazers_sample": _stargazers(60, followers=10, repos=8, account_age_days=1200),
+        "stargazers_sample": _stargazers(
+            60, followers=10, repos=8, account_age_days=1200
+        ),
         "code_snippets": [{"path": "lib.py", "content": "def util(): pass"}],
         "recent_prs": [],
-        "commit_timeline": _timeline([
-            ("2022-01", 8), ("2022-02", 5), ("2022-03", 3),
-            # 18 months dormant
-            ("2022-04", 0), ("2022-05", 0), ("2022-06", 0),
-            ("2022-07", 0), ("2022-08", 0), ("2022-09", 0),
-            ("2022-10", 0), ("2022-11", 0), ("2022-12", 0),
-            ("2023-01", 0), ("2023-02", 0), ("2023-03", 0),
-            ("2023-04", 0), ("2023-05", 0), ("2023-06", 0),
-            ("2023-07", 0), ("2023-08", 0), ("2023-09", 0),
-            # burst
-            ("2023-10", 25), ("2023-11", 18),
-        ]),
+        "commit_timeline": _timeline(
+            [
+                ("2022-01", 8),
+                ("2022-02", 5),
+                ("2022-03", 3),
+                # 18 months dormant
+                ("2022-04", 0),
+                ("2022-05", 0),
+                ("2022-06", 0),
+                ("2022-07", 0),
+                ("2022-08", 0),
+                ("2022-09", 0),
+                ("2022-10", 0),
+                ("2022-11", 0),
+                ("2022-12", 0),
+                ("2023-01", 0),
+                ("2023-02", 0),
+                ("2023-03", 0),
+                ("2023-04", 0),
+                ("2023-05", 0),
+                ("2023-06", 0),
+                ("2023-07", 0),
+                ("2023-08", 0),
+                ("2023-09", 0),
+                # burst
+                ("2023-10", 25),
+                ("2023-11", 18),
+            ]
+        ),
     }
 
 
@@ -250,8 +325,12 @@ def wormgpt_pattern_repo() -> dict:
         "default_branch": "main",
         "commit_count": 0,
         "stargazers_sample": _stargazers(60, followers=0, repos=0, account_age_days=60),
-        "code_snippets": [{"path": "bot.py",
-                           "content": "import requests\nurl = 'https://openrouter.ai/api/v1'\n# premium only"}],
+        "code_snippets": [
+            {
+                "path": "bot.py",
+                "content": "import requests\nurl = 'https://openrouter.ai/api/v1'\n# premium only",
+            }
+        ],
         "recent_prs": [],
         "commit_timeline": _timeline([("2024-12", 2)]),
     }

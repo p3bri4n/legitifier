@@ -24,11 +24,19 @@ def export_jsonl(output: Path, store: FeedbackStore | None = None) -> int:
                 "scanner_version": record.scan_report.scanner_version,
                 "scanned_at": record.scan_report.scanned_at.isoformat(),
                 "readme": next(
-                    (r.raw_data.get("readme", "") for r in record.scan_report.results if "readme" in r.raw_data),
+                    (
+                        r.raw_data.get("readme", "")
+                        for r in record.scan_report.results
+                        if "readme" in r.raw_data
+                    ),
                     "",
                 ),
-                "heuristic_scores": {r.heuristic_id: r.score for r in record.scan_report.results},
-                "heuristic_triggered": {r.heuristic_id: r.triggered for r in record.scan_report.results},
+                "heuristic_scores": {
+                    r.heuristic_id: r.score for r in record.scan_report.results
+                },
+                "heuristic_triggered": {
+                    r.heuristic_id: r.triggered for r in record.scan_report.results
+                },
             }
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 

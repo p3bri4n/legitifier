@@ -19,6 +19,7 @@ class TestFetchCache:
 
     def test_datetime_serialization(self, cache):
         from datetime import datetime
+
         now = datetime.now(UTC)
         cache.set("owner/repo", {"created_at": now, "stars": 42})
         result = cache.get("owner/repo")
@@ -28,6 +29,7 @@ class TestFetchCache:
 
     def test_date_serialization(self, cache):
         from datetime import date
+
         d = date(2024, 5, 16)
         cache.set("owner/repo", {"added": d})
         result = cache.get("owner/repo")
@@ -67,12 +69,14 @@ class TestScanVersionInvalidation:
 
     def _make_store(self, tmp_path):
         from legitifier_pkg.feedback.store import FeedbackStore
+
         return FeedbackStore(db_path=tmp_path / "scans.db")
 
     def _save_scan(self, store, version="1.0.0", pushed_at=None):
         from unittest.mock import MagicMock
 
         from legitifier_pkg.core.models import ScanReport, Verdict
+
         report = MagicMock(spec=ScanReport)
         report.repo_url = "github.com/owner/repo"
         report.risk_score = 0.0
@@ -81,17 +85,21 @@ class TestScanVersionInvalidation:
         report.errors = []
         report.scan_duration_seconds = 1.0
         report.scanner_version = version
-        report.scanned_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
-        report.model_dump_json = lambda **_: __import__("json").dumps({
-            "repo_url": report.repo_url,
-            "risk_score": 0.0,
-            "verdict": "CLEAN",
-            "results": [],
-            "errors": [],
-            "scan_duration_seconds": 1.0,
-            "scanner_version": version,
-            "scanned_at": report.scanned_at.isoformat(),
-        })
+        report.scanned_at = __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc
+        )
+        report.model_dump_json = lambda **_: __import__("json").dumps(
+            {
+                "repo_url": report.repo_url,
+                "risk_score": 0.0,
+                "verdict": "CLEAN",
+                "results": [],
+                "errors": [],
+                "scan_duration_seconds": 1.0,
+                "scanner_version": version,
+                "scanned_at": report.scanned_at.isoformat(),
+            }
+        )
         store.save_scan(report)
 
     def test_returns_scan_same_version(self, tmp_path):
@@ -112,22 +120,22 @@ class TestScanVersionInvalidation:
 
     def test_invalidates_if_repo_pushed_after_scan(self, tmp_path):
         from datetime import datetime, timedelta
+
         store = self._make_store(tmp_path)
         self._save_scan(store, version="1.0.0")
         future_push = datetime.now(UTC) + timedelta(hours=1)
         result = store.get_recent_scan(
-            "github.com/owner/repo", max_age_seconds=3600,
-            repo_pushed_at=future_push
+            "github.com/owner/repo", max_age_seconds=3600, repo_pushed_at=future_push
         )
         assert result is None
 
     def test_valid_if_repo_pushed_before_scan(self, tmp_path):
         from datetime import datetime, timedelta
+
         store = self._make_store(tmp_path)
         self._save_scan(store, version="1.0.0")
         old_push = datetime.now(UTC) - timedelta(days=30)
         result = store.get_recent_scan(
-            "github.com/owner/repo", max_age_seconds=3600,
-            repo_pushed_at=old_push
+            "github.com/owner/repo", max_age_seconds=3600, repo_pushed_at=old_push
         )
         assert result is not None

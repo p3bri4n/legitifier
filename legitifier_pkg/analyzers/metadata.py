@@ -13,7 +13,9 @@ class MetadataAnalyzer(BaseAnalyzer):
         handler = getattr(self, f"_handle_{config.id}", self._handle_unknown)
         return handler(config, data)
 
-    def _handle_account_age(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_account_age(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         created_at: datetime | None = data.get("owner_created_at")
         if created_at is None:
             return self._clean_result(config)
@@ -26,7 +28,11 @@ class MetadataAnalyzer(BaseAnalyzer):
         triggered = age_days < min_days
         context = {"age_days": age_days, "min_days": min_days}
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -36,7 +42,9 @@ class MetadataAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_commit_burst(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_commit_burst(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         created_at: datetime | None = data.get("created_at")
         pushed_at: datetime | None = data.get("pushed_at")
         commit_count: int = data.get("commit_count", 0)
@@ -71,7 +79,11 @@ class MetadataAnalyzer(BaseAnalyzer):
             "days_since_push": days_since_push,
         }
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -81,7 +93,9 @@ class MetadataAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_no_activity(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_no_activity(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         stars = data.get("stars", 0)
         open_issues = data.get("open_issues", 0)
         commit_count = data.get("commit_count", 0)
@@ -100,9 +114,17 @@ class MetadataAnalyzer(BaseAnalyzer):
                 return self._clean_result(config)
 
         triggered = stars >= min_stars and open_issues == 0 and commit_count == 0
-        context = {"stars": stars, "open_issues": open_issues, "commit_count": commit_count}
+        context = {
+            "stars": stars,
+            "open_issues": open_issues,
+            "commit_count": commit_count,
+        }
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -112,7 +134,9 @@ class MetadataAnalyzer(BaseAnalyzer):
             raw_data=context,
         )
 
-    def _handle_unknown(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_unknown(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         return self._clean_result(config)
 
     def _clean_result(self, config: HeuristicConfig) -> HeuristicResult:
@@ -124,7 +148,9 @@ class MetadataAnalyzer(BaseAnalyzer):
             severity=config.severity,
         )
 
-    def _handle_owner_reputation(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_owner_reputation(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         rep: dict = data.get("owner_reputation") or {}
         score = float(rep.get("score", 0.0))
         min_score = config.thresholds.get("min_score_to_trigger", 40)

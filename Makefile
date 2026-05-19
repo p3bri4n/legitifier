@@ -1,4 +1,4 @@
-.PHONY: install install-llm install-all test lint coverage clean bump help
+.PHONY: install install-llm install-all test lint lint-fix coverage clean bump help
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -9,7 +9,8 @@ help:
 	@echo "  make install-llm  — add LLM support (OpenAI, Anthropic, Ollama)"
 	@echo "  make install-all  — install everything"
 	@echo "  make test         — run test suite"
-	@echo "  make lint         — run ruff linter"
+	@echo "  make lint         — run ruff check + format check"
+	@echo "  make lint-fix     — auto-fix lint and format issues"
 	@echo "  make coverage     — run tests with coverage report"
 	@echo "  make bump         — bump version to YYYY.MMDD.hhmm"
 	@echo "  make clean        — remove venv and caches"
@@ -34,6 +35,11 @@ test:
 
 lint:
 	$(VENV)/bin/ruff check .
+	$(VENV)/bin/ruff format --check .
+
+lint-fix:
+	$(VENV)/bin/ruff check . --fix
+	$(VENV)/bin/ruff format .
 
 coverage:
 	$(PYTHON) -m pytest tests/ --cov=legitifier_pkg --cov-report=term-missing

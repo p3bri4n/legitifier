@@ -15,6 +15,7 @@ Output:
     calibration_report.json  — raw data
     calibration_report.md    — human-readable summary
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,12 +56,12 @@ LEGIT_REPOS = [
 
 # Educational repos — honest learning projects, low forks expected
 EDUCATIONAL_REPOS = [
-    "github.com/p3bri4n/risc-v-32-edu",   # RV32I simulator in Python
+    "github.com/p3bri4n/risc-v-32-edu",  # RV32I simulator in Python
     "github.com/nand2tetris/nand2tetris",  # From Nand to Tetris course
-    "github.com/karpathy/micrograd",       # Educational autograd engine
-    "github.com/karpathy/makemore",        # Educational language model
-    "github.com/fastai/fastbook",          # Deep learning course notebooks
-    "github.com/karpathy/ng-video-lecture", # Neural nets from scratch
+    "github.com/karpathy/micrograd",  # Educational autograd engine
+    "github.com/karpathy/makemore",  # Educational language model
+    "github.com/fastai/fastbook",  # Deep learning course notebooks
+    "github.com/karpathy/ng-video-lecture",  # Neural nets from scratch
 ]
 
 DELAY = 6.0  # seconds between scans
@@ -76,8 +77,12 @@ def _make_pipeline(token: str | None) -> Pipeline:
     )
 
 
-def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore) -> dict | None:
-    existing = store.get_recent_scan(url, max_age_seconds=6 * 3600, current_version=__version__)
+def scan_repo(
+    pipeline: Pipeline, url: str, category: str, store: FeedbackStore
+) -> dict | None:
+    existing = store.get_recent_scan(
+        url, max_age_seconds=6 * 3600, current_version=__version__
+    )
     if existing:
         triggered = [r.heuristic_id for r in existing.results if r.triggered]
         trust = round(100 - existing.risk_score, 1)
@@ -88,9 +93,12 @@ def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore)
             + (f"  [{', '.join(triggered)}]" if triggered else "")
         )
         return {
-            "url": url, "category": category, "cached": True,
+            "url": url,
+            "category": category,
+            "cached": True,
             "verdict": existing.verdict.value,
-            "risk_score": existing.risk_score, "trust": trust,
+            "risk_score": existing.risk_score,
+            "trust": trust,
             "triggered": triggered,
             "scores": {r.heuristic_id: r.score for r in existing.results},
         }
@@ -105,7 +113,9 @@ def scan_repo(pipeline: Pipeline, url: str, category: str, store: FeedbackStore)
             + (f"  [{', '.join(triggered)}]" if triggered else "")
         )
         return {
-            "url": url, "category": category, "cached": False,
+            "url": url,
+            "category": category,
+            "cached": False,
             "verdict": report.verdict.value,
             "risk_score": report.risk_score,
             "trust": round(100 - report.risk_score, 1),
@@ -134,7 +144,7 @@ def collect(args) -> list[dict]:
             r = scan_repo(pipeline, url, "legit", store)
             if r:
                 results.append(r)
-            if not r or not r.get('cached'):
+            if not r or not r.get("cached"):
                 time.sleep(DELAY)
 
         print(f"\n{'─' * 60}")
@@ -146,7 +156,7 @@ def collect(args) -> list[dict]:
             r = scan_repo(pipeline, url, "legit_trending", store)
             if r:
                 results.append(r)
-            if not r or not r.get('cached'):
+            if not r or not r.get("cached"):
                 time.sleep(DELAY)
 
         print(f"\n{'─' * 60}")
@@ -178,8 +188,11 @@ def collect(args) -> list[dict]:
         print("🚨 SUSPECTS — WormGPT variants")
         print(f"{'─' * 60}")
         from legitifier_pkg.search import search_repos
+
         count = 0
-        for url, _ in search_repos("topic:worm-gpt OR topic:darkgpt stars:>10", token, 50):
+        for url, _ in search_repos(
+            "topic:worm-gpt OR topic:darkgpt stars:>10", token, 50
+        ):
             if url.startswith("__"):
                 break
             r = scan_repo(pipeline, url, "wormgpt", store)
@@ -198,7 +211,11 @@ def report(results: list[dict]) -> None:
         print("No results to report.")
         return
 
-    legit = [r for r in results if r["category"] in ("legit", "legit_trending", "educational")]
+    legit = [
+        r
+        for r in results
+        if r["category"] in ("legit", "legit_trending", "educational")
+    ]
     suspects = [r for r in results if r["category"] in ("starscout", "wormgpt")]
 
     # Collect all heuristic IDs
@@ -209,8 +226,12 @@ def report(results: list[dict]) -> None:
 
     # False positive rate per heuristic
     lines.append("## False Positive Rate (triggered on legit repos)\n")
-    lines.append("| Heuristic | Legit triggered | FP rate | Suspect triggered | Detection rate |")
-    lines.append("|-----------|----------------|---------|-------------------|----------------|")
+    lines.append(
+        "| Heuristic | Legit triggered | FP rate | Suspect triggered | Detection rate |"
+    )
+    lines.append(
+        "|-----------|----------------|---------|-------------------|----------------|"
+    )
 
     fp_data = []
     for h in all_heuristics:
@@ -227,8 +248,12 @@ def report(results: list[dict]) -> None:
 
     # Trust score distribution
     lines.append("\n## Trust Score Distribution\n")
-    lines.append("| Category | Min | Median | Max | CLEAN | SUSPICIOUS | LIKELY_SCAM | SCAM |")
-    lines.append("|----------|-----|--------|-----|-------|------------|-------------|------|")
+    lines.append(
+        "| Category | Min | Median | Max | CLEAN | SUSPICIOUS | LIKELY_SCAM | SCAM |"
+    )
+    lines.append(
+        "|----------|-----|--------|-----|-------|------------|-------------|------|"
+    )
 
     for label, group in [("Legit", legit), ("Suspects", suspects)]:
         if not group:
@@ -236,7 +261,7 @@ def report(results: list[dict]) -> None:
         scores = sorted(r["trust"] for r in group)
         verdicts = [r["verdict"] for r in group]
         lines.append(
-            f"| {label} | {scores[0]:.0f} | {scores[len(scores)//2]:.0f} | {scores[-1]:.0f} "
+            f"| {label} | {scores[0]:.0f} | {scores[len(scores) // 2]:.0f} | {scores[-1]:.0f} "
             f"| {verdicts.count('CLEAN')} | {verdicts.count('SUSPICIOUS')} "
             f"| {verdicts.count('LIKELY_SCAM')} | {verdicts.count('SCAM')} |"
         )
@@ -262,10 +287,17 @@ def report(results: list[dict]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--skip-legit", action="store_true", help="Skip legitimate baseline scans")
-    parser.add_argument("--skip-suspects", action="store_true", help="Skip suspect scans")
-    parser.add_argument("--report", action="store_true",
-                        help="Generate report from existing calibration_report.json")
+    parser.add_argument(
+        "--skip-legit", action="store_true", help="Skip legitimate baseline scans"
+    )
+    parser.add_argument(
+        "--skip-suspects", action="store_true", help="Skip suspect scans"
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Generate report from existing calibration_report.json",
+    )
     args = parser.parse_args()
 
     if args.report:

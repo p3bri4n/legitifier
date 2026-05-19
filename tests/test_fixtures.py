@@ -3,6 +3,7 @@ Regression tests using realistic repo fixtures.
 Each test verifies that a known pattern is correctly detected (or not).
 These tests document the expected behavior and catch calibration regressions.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -47,14 +48,19 @@ def _triggered_ids(report) -> set[str]:
 
 # ── Legitimate repos must score CLEAN ─────────────────────────────────────────
 
+
 class TestLegitRepos:
     def test_popular_legit_is_clean(self, store):
         report = _scan(legit_popular_repo(), store)
-        assert report.verdict == Verdict.CLEAN, f"Got {report.verdict}, triggers: {_triggered_ids(report)}"
+        assert report.verdict == Verdict.CLEAN, (
+            f"Got {report.verdict}, triggers: {_triggered_ids(report)}"
+        )
 
     def test_small_legit_is_clean(self, store):
         report = _scan(legit_small_repo(), store)
-        assert report.verdict == Verdict.CLEAN, f"Got {report.verdict}, triggers: {_triggered_ids(report)}"
+        assert report.verdict == Verdict.CLEAN, (
+            f"Got {report.verdict}, triggers: {_triggered_ids(report)}"
+        )
 
     def test_legit_scores_lower_than_scam(self, store):
         legit = _scan(legit_popular_repo(), store)
@@ -63,6 +69,7 @@ class TestLegitRepos:
 
 
 # ── Scam patterns must trigger relevant heuristics ────────────────────────────
+
 
 class TestBoughtStars:
     def test_triggers_low_fork_ratio(self, store):
@@ -132,6 +139,7 @@ class TestWormGPTPattern:
 
 # ── Score ordering sanity check ───────────────────────────────────────────────
 
+
 class TestScoreOrdering:
     """Verify that more suspicious repos score higher than cleaner ones."""
 
@@ -164,15 +172,23 @@ class TestWormGPTTelegramFunnel:
 class TestHardcodedSecrets:
     def test_triggers_on_exposed_key(self, store):
         data = api_wrapper_repo()
-        data["code_snippets"] = [{"path": "bot.py",
-                                   "content": 'OPENAI_KEY = "sk-proj-abc123realkey"\nclient = openai.OpenAI()'}]
+        data["code_snippets"] = [
+            {
+                "path": "bot.py",
+                "content": 'OPENAI_KEY = "sk-proj-abc123realkey"\nclient = openai.OpenAI()',
+            }
+        ]
         report = _scan(data, store)
         assert "hardcoded_secrets" in _triggered_ids(report)
 
     def test_not_triggered_on_placeholder(self, store):
         data = legit_popular_repo()
-        data["code_snippets"] = [{"path": "config.py",
-                                   "content": 'OPENAI_KEY = "YOUR_API_KEY"  # replace this'}]
+        data["code_snippets"] = [
+            {
+                "path": "config.py",
+                "content": 'OPENAI_KEY = "YOUR_API_KEY"  # replace this',
+            }
+        ]
         report = _scan(data, store)
         assert "hardcoded_secrets" not in _triggered_ids(report)
 
@@ -180,15 +196,23 @@ class TestHardcodedSecrets:
 class TestRequirementsChaos:
     def test_triggers_on_duplicate_packages(self, store):
         data = wormgpt_pattern_repo()
-        data["code_snippets"] = [{"path": "requirements.txt",
-                                   "content": "openai==0.28.0\nopenai==1.3.0\nnumpy\npandas"}]
+        data["code_snippets"] = [
+            {
+                "path": "requirements.txt",
+                "content": "openai==0.28.0\nopenai==1.3.0\nnumpy\npandas",
+            }
+        ]
         report = _scan(data, store)
         assert "requirements_chaos" in _triggered_ids(report)
 
     def test_not_triggered_on_clean_requirements(self, store):
         data = legit_popular_repo()
-        data["code_snippets"] = [{"path": "requirements.txt",
-                                   "content": "requests==2.31.0\nnumpy==1.24.0\npandas==2.0.0"}]
+        data["code_snippets"] = [
+            {
+                "path": "requirements.txt",
+                "content": "requests==2.31.0\nnumpy==1.24.0\npandas==2.0.0",
+            }
+        ]
         report = _scan(data, store)
         assert "requirements_chaos" not in _triggered_ids(report)
 
@@ -216,7 +240,9 @@ class TestCoverageSignals:
 
     def test_triggers_on_false_coverage_claim(self, store):
         data = empty_readme_repo()
-        data["readme"] = "# Project\n![coverage-100%](https://img.shields.io/badge/coverage-100%25-green)"
+        data["readme"] = (
+            "# Project\n![coverage-100%](https://img.shields.io/badge/coverage-100%25-green)"
+        )
         data["code_snippets"] = [
             {"path": "main.py", "content": "def run(): pass"},
             {"path": "utils.py", "content": "def helper(): pass"},
@@ -233,8 +259,14 @@ class TestCoverageSignals:
         data["code_snippets"] = [
             {"path": "model.py", "content": "class Model: pass"},
             {"path": "utils.py", "content": "def helper(): pass"},
-            {"path": "tests/test_model.py", "content": "def test_model():\n    m = Model()\n    assert m is not None"},
-            {"path": "tests/test_utils.py", "content": "def test_helper():\n    assert helper() == expected"},
+            {
+                "path": "tests/test_model.py",
+                "content": "def test_model():\n    m = Model()\n    assert m is not None",
+            },
+            {
+                "path": "tests/test_utils.py",
+                "content": "def test_helper():\n    assert helper() == expected",
+            },
         ]
         report = _scan(data, store)
         assert "test_coverage_signals" not in _triggered_ids(report)
@@ -257,8 +289,14 @@ class TestDocumentationQuality:
         data = legit_popular_repo()
         # legit_popular_repo has a proper readme and we add commented code
         data["code_snippets"] = [
-            {"path": "model.py", "content": "# Main model class\n\ndef train():\n    \"\"\"Train the model.\"\"\"\n    pass"},
-            {"path": "utils.py", "content": "# Utility functions\n\ndef preprocess(data):\n    # Clean input\n    return data"},
+            {
+                "path": "model.py",
+                "content": '# Main model class\n\ndef train():\n    """Train the model."""\n    pass',
+            },
+            {
+                "path": "utils.py",
+                "content": "# Utility functions\n\ndef preprocess(data):\n    # Clean input\n    return data",
+            },
         ]
         report = _scan(data, store)
         assert "documentation_quality" not in _triggered_ids(report)

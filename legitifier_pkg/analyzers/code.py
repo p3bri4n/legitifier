@@ -12,7 +12,9 @@ class CodeAnalyzer(BaseAnalyzer):
         handler = getattr(self, f"_handle_{config.id}", self._handle_unknown)
         return handler(config, data)
 
-    def _handle_api_disguised_as_local(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_api_disguised_as_local(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         snippets: list[dict[str, str]] = data.get("code_snippets", [])
         readme: str = data.get("readme", "")
         t = config.thresholds
@@ -32,7 +34,11 @@ class CodeAnalyzer(BaseAnalyzer):
             "local_claims": ", ".join(local_claims[:3]),
         }
 
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -46,7 +52,9 @@ class CodeAnalyzer(BaseAnalyzer):
             },
         )
 
-    def _handle_unknown(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_unknown(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         return self._clean_result(config)
 
     def _clean_result(self, config: HeuristicConfig) -> HeuristicResult:
@@ -58,7 +66,9 @@ class CodeAnalyzer(BaseAnalyzer):
             severity=config.severity,
         )
 
-    def _handle_hardcoded_secrets(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_hardcoded_secrets(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         snippets: list[dict] = data.get("code_snippets", [])
         t = config.thresholds
         secret_patterns: list[str] = t.get("secret_patterns", [])
@@ -71,12 +81,18 @@ class CodeAnalyzer(BaseAnalyzer):
             if pattern.lower() in all_code.lower():
                 # Check it's not a placeholder
                 idx = all_code.lower().find(pattern.lower())
-                surrounding = all_code[max(0, idx-10):idx+len(pattern)+40]
-                if not any(ph.lower() in surrounding.lower() for ph in placeholder_patterns):
+                surrounding = all_code[max(0, idx - 10) : idx + len(pattern) + 40]
+                if not any(
+                    ph.lower() in surrounding.lower() for ph in placeholder_patterns
+                ):
                     secret_matches.append(pattern)
 
         triggered = bool(secret_matches)
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         context = {"secret_matches": ", ".join(secret_matches[:3])}
         return HeuristicResult(
             heuristic_id=config.id,
@@ -87,9 +103,15 @@ class CodeAnalyzer(BaseAnalyzer):
             raw_data={"secret_matches": secret_matches, "files_scanned": len(snippets)},
         )
 
-    def _handle_requirements_chaos(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_requirements_chaos(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         snippets: list[dict] = data.get("code_snippets", [])
-        req_files = [s for s in snippets if "requirements" in s["path"].lower() and s["path"].endswith(".txt")]
+        req_files = [
+            s
+            for s in snippets
+            if "requirements" in s["path"].lower() and s["path"].endswith(".txt")
+        ]
 
         if not req_files:
             return self._clean_result(config)
@@ -115,7 +137,11 @@ class CodeAnalyzer(BaseAnalyzer):
             "duplicate_count": len(duplicates),
             "duplicates": ", ".join(duplicates[:5]),
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -125,7 +151,9 @@ class CodeAnalyzer(BaseAnalyzer):
             raw_data={"duplicates": duplicates},
         )
 
-    def _handle_test_coverage_signals(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_test_coverage_signals(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         snippets: list[dict] = data.get("code_snippets", [])
         readme: str = (data.get("readme") or "").lower()
         t = config.thresholds
@@ -133,14 +161,22 @@ class CodeAnalyzer(BaseAnalyzer):
         min_source_files = t.get("min_source_files", 3)
 
         # Classify files
-        test_files = [s for s in snippets
-                      if any(s["path"].startswith(p) or f"/{p}" in s["path"]
-                             for p in ("test", "tests", "spec", "__test__"))
-                      or s["path"].split("/")[-1].startswith("test_")
-                      or s["path"].split("/")[-1].endswith("_test.py")]
-        source_files = [s for s in snippets
-                        if s["path"].endswith((".py", ".js", ".ts", ".go", ".rs", ".java"))
-                        and not any(s["path"].startswith(p) for p in ("test", "tests"))]
+        test_files = [
+            s
+            for s in snippets
+            if any(
+                s["path"].startswith(p) or f"/{p}" in s["path"]
+                for p in ("test", "tests", "spec", "__test__")
+            )
+            or s["path"].split("/")[-1].startswith("test_")
+            or s["path"].split("/")[-1].endswith("_test.py")
+        ]
+        source_files = [
+            s
+            for s in snippets
+            if s["path"].endswith((".py", ".js", ".ts", ".go", ".rs", ".java"))
+            and not any(s["path"].startswith(p) for p in ("test", "tests"))
+        ]
 
         n_tests = len(test_files)
         n_source = len(source_files)
@@ -155,7 +191,9 @@ class CodeAnalyzer(BaseAnalyzer):
         # Check for false coverage claims — only meaningful if we have source files
         badge_patterns: list[str] = t.get("coverage_badge_patterns", [])
         badge_matches = [p for p in badge_patterns if p in readme]
-        false_coverage_claim = bool(badge_matches) and n_tests == 0 and n_source >= min_source_files
+        false_coverage_claim = (
+            bool(badge_matches) and n_tests == 0 and n_source >= min_source_files
+        )
 
         triggered = (
             (n_source > 3 and ratio < min_ratio)  # source files but almost no tests
@@ -167,10 +205,18 @@ class CodeAnalyzer(BaseAnalyzer):
             "test_files": n_tests,
             "source_files": n_source,
             "ratio": round(ratio, 2),
-            "empty_note": f" — empty test patterns: {', '.join(empty_matches[:2])}" if empty_matches else "",
-            "badge_note": " — coverage badge claimed but no tests found" if false_coverage_claim else "",
+            "empty_note": f" — empty test patterns: {', '.join(empty_matches[:2])}"
+            if empty_matches
+            else "",
+            "badge_note": " — coverage badge claimed but no tests found"
+            if false_coverage_claim
+            else "",
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
@@ -186,7 +232,9 @@ class CodeAnalyzer(BaseAnalyzer):
             },
         )
 
-    def _handle_documentation_quality(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
+    def _handle_documentation_quality(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult:
         snippets: list[dict] = data.get("code_snippets", [])
         readme: str = data.get("readme") or ""
         t = config.thresholds
@@ -196,9 +244,14 @@ class CodeAnalyzer(BaseAnalyzer):
         min_sections = t.get("min_readme_sections", 2)
         min_source_files = t.get("min_source_files", 3)
 
-        source_files = [s for s in snippets
-                        if s["path"].endswith((".py", ".js", ".ts", ".go", ".rs", ".java"))
-                        and not any(p in s["path"] for p in ("test_", "_test.", "/tests/", "/test/"))]
+        source_files = [
+            s
+            for s in snippets
+            if s["path"].endswith((".py", ".js", ".ts", ".go", ".rs", ".java"))
+            and not any(
+                p in s["path"] for p in ("test_", "_test.", "/tests/", "/test/")
+            )
+        ]
 
         signals = []
 
@@ -210,7 +263,8 @@ class CodeAnalyzer(BaseAnalyzer):
 
         # README sections check
         import re
-        sections = len(re.findall(r'^#{1,3}\s+\w+|^\*\*\w+', readme, re.MULTILINE))
+
+        sections = len(re.findall(r"^#{1,3}\s+\w+|^\*\*\w+", readme, re.MULTILINE))
         readme_no_structure = sections < min_sections
         if readme_no_structure and readme_length > 100:
             signals.append("no_structure")
@@ -225,9 +279,14 @@ class CodeAnalyzer(BaseAnalyzer):
                 total_lines += len(lines)
                 for line in lines:
                     stripped = line.strip()
-                    if (stripped.startswith("#") or stripped.startswith("//")
-                            or stripped.startswith("/*") or stripped.startswith("*")
-                            or stripped.startswith('"""') or stripped.startswith("'''")):
+                    if (
+                        stripped.startswith("#")
+                        or stripped.startswith("//")
+                        or stripped.startswith("/*")
+                        or stripped.startswith("*")
+                        or stripped.startswith('"""')
+                        or stripped.startswith("'''")
+                    ):
                         comment_lines += 1
             comment_ratio = comment_lines / total_lines if total_lines > 0 else 1.0
             if comment_ratio < min_comment_ratio:
@@ -239,16 +298,28 @@ class CodeAnalyzer(BaseAnalyzer):
             "readme_length": readme_length,
             "readme_note": f" (min: {min_readme_len})" if readme_too_short else "",
             "comment_ratio_pct": round(comment_ratio * 100, 1),
-            "comment_note": f" (min: {min_comment_ratio*100:.0f}%)" if "no_comments" in signals else "",
-            "section_note": f", {sections} section(s) found" if readme_no_structure else "",
+            "comment_note": f" (min: {min_comment_ratio * 100:.0f}%)"
+            if "no_comments" in signals
+            else "",
+            "section_note": f", {sections} section(s) found"
+            if readme_no_structure
+            else "",
         }
-        score = config.scoring.score_if_triggered if triggered else config.scoring.score_if_clean
+        score = (
+            config.scoring.score_if_triggered
+            if triggered
+            else config.scoring.score_if_clean
+        )
         return HeuristicResult(
             heuristic_id=config.id,
             score=score,
             triggered=triggered,
             evidence=self._render_evidence(config.evidence_template, context),
             severity=config.severity,
-            raw_data={"signals": signals, "readme_length": readme_length,
-                      "comment_ratio": round(comment_ratio, 3), "sections": sections},
+            raw_data={
+                "signals": signals,
+                "readme_length": readme_length,
+                "comment_ratio": round(comment_ratio, 3),
+                "sections": sections,
+            },
         )

@@ -123,7 +123,9 @@ class FeedbackStore:
 
     def _get_report(self, scan_id: int) -> ScanReport:
         with self._connect() as conn:
-            row = conn.execute("SELECT report_json FROM scans WHERE id=?", (scan_id,)).fetchone()
+            row = conn.execute(
+                "SELECT report_json FROM scans WHERE id=?", (scan_id,)
+            ).fetchone()
         if not row:
             raise KeyError(f"No scan with id={scan_id}")
         return ScanReport.model_validate(json.loads(row[0]))
@@ -139,15 +141,17 @@ class FeedbackStore:
         records = []
         for report_json, verdict, confidence, note, submitted_at, user_id in rows:
             report = ScanReport.model_validate(json.loads(report_json))
-            records.append(FeedbackRecord(
-                repo_url=report.repo_url,
-                scan_report=report,
-                user_verdict=Verdict(verdict),
-                confidence=Confidence(confidence),
-                note=note,
-                submitted_at=submitted_at,
-                anonymous_user_id=user_id,
-            ))
+            records.append(
+                FeedbackRecord(
+                    repo_url=report.repo_url,
+                    scan_report=report,
+                    user_verdict=Verdict(verdict),
+                    confidence=Confidence(confidence),
+                    note=note,
+                    submitted_at=submitted_at,
+                    anonymous_user_id=user_id,
+                )
+            )
         return records
 
     def save_reputation(
@@ -162,11 +166,21 @@ class FeedbackStore:
     ) -> None:
         """Persist a reputation entry derived from user feedback."""
         from datetime import date
+
         with self._connect() as conn:
             conn.execute(
                 "INSERT INTO reputation (type, login, slug, verdict, confidence, source, note, added) "
                 "VALUES (?,?,?,?,?,?,?,?)",
-                (entry_type, login, slug, verdict, confidence, source, note, date.today().isoformat()),
+                (
+                    entry_type,
+                    login,
+                    slug,
+                    verdict,
+                    confidence,
+                    source,
+                    note,
+                    date.today().isoformat(),
+                ),
             )
 
     def recent_scans(
@@ -198,8 +212,13 @@ class FeedbackStore:
         with self._connect() as conn:
             rows = conn.execute(query, params).fetchall()
         return [
-            {"id": r[0], "repo_url": r[1], "scanned_at": r[2],
-             "risk_score": r[3], "verdict": r[4]}
+            {
+                "id": r[0],
+                "repo_url": r[1],
+                "scanned_at": r[2],
+                "risk_score": r[3],
+                "verdict": r[4],
+            }
             for r in rows
         ]
 
@@ -233,6 +252,7 @@ class FeedbackStore:
 
         report_json, scanned_at_str = row
         from datetime import UTC, datetime
+
         try:
             scanned_at = datetime.fromisoformat(scanned_at_str)
             if scanned_at.tzinfo is None:
@@ -270,6 +290,7 @@ class FeedbackStore:
 
     def set_search_offset(self, query: str, offset: int) -> None:
         from datetime import datetime
+
         now = datetime.now(UTC).isoformat()
         with self._connect() as conn:
             conn.execute(
@@ -325,8 +346,16 @@ class FeedbackStore:
                     conn.execute(
                         "INSERT INTO reputation (type, login, slug, verdict, confidence, source, note, added) "
                         "VALUES (?,?,?,?,?,?,?,?)",
-                        ("contributor", login, None, verdict, "probable",
-                         "auto", f"Contributor to {report.repo_url}", now_date),
+                        (
+                            "contributor",
+                            login,
+                            None,
+                            verdict,
+                            "probable",
+                            "auto",
+                            f"Contributor to {report.repo_url}",
+                            now_date,
+                        ),
                     )
                     added += 1
 

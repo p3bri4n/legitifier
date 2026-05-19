@@ -10,9 +10,11 @@ _ANALYZER_REGISTRY: dict[str, type[BaseAnalyzer]] = {}
 
 def analyzer_for(category: str):
     """Class decorator to register an analyzer for a heuristic category."""
+
     def decorator(cls: type[BaseAnalyzer]) -> type[BaseAnalyzer]:
         _ANALYZER_REGISTRY[category] = cls
         return cls
+
     return decorator
 
 
@@ -25,8 +27,9 @@ def get_analyzer(category: str) -> BaseAnalyzer:
 
 class BaseAnalyzer(ABC):
     @abstractmethod
-    def analyze(self, config: HeuristicConfig, data: dict[str, Any]) -> HeuristicResult:
-        ...
+    def analyze(
+        self, config: HeuristicConfig, data: dict[str, Any]
+    ) -> HeuristicResult: ...
 
     def _render_evidence(self, template: str, context: dict[str, Any]) -> str:
         try:

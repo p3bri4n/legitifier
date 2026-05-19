@@ -14,14 +14,42 @@ from legitifier_pkg.fetchers.local_db import LocalDBFetcher
 def seed_file(tmp_path) -> Path:
     path = tmp_path / "seed.jsonl"
     entries = [
-        {"type": "owner", "login": "evil-org", "verdict": "SCAM",
-         "confidence": "certain", "source": "manual", "note": "known scammer", "added": "2026-05-16"},
-        {"type": "repo", "slug": "evil-org/wormgpt", "verdict": "SCAM",
-         "confidence": "certain", "source": "manual", "note": "API wrapper scam", "added": "2026-05-16"},
-        {"type": "owner", "login": "maybe-bad", "verdict": "SUSPICIOUS",
-         "confidence": "probable", "source": "manual", "note": "pattern matches", "added": "2026-05-16"},
-        {"type": "owner", "login": "legit-dev", "verdict": "CLEAN",
-         "confidence": "certain", "source": "manual", "note": "verified researcher", "added": "2026-05-16"},
+        {
+            "type": "owner",
+            "login": "evil-org",
+            "verdict": "SCAM",
+            "confidence": "certain",
+            "source": "manual",
+            "note": "known scammer",
+            "added": "2026-05-16",
+        },
+        {
+            "type": "repo",
+            "slug": "evil-org/wormgpt",
+            "verdict": "SCAM",
+            "confidence": "certain",
+            "source": "manual",
+            "note": "API wrapper scam",
+            "added": "2026-05-16",
+        },
+        {
+            "type": "owner",
+            "login": "maybe-bad",
+            "verdict": "SUSPICIOUS",
+            "confidence": "probable",
+            "source": "manual",
+            "note": "pattern matches",
+            "added": "2026-05-16",
+        },
+        {
+            "type": "owner",
+            "login": "legit-dev",
+            "verdict": "CLEAN",
+            "confidence": "certain",
+            "source": "manual",
+            "note": "verified researcher",
+            "added": "2026-05-16",
+        },
     ]
     path.write_text("\n".join(json.dumps(e) for e in entries))
     return path
@@ -95,10 +123,24 @@ class TestLocalDBFetcher:
         store = ReputationStore(seed_path=seed_file)
         fetcher = LocalDBFetcher(store=store)
         prs = [
-            {"user_login": "evil-org", "title": "Add feature", "created_at": None,
-             "merged": False, "comments": 0, "user_followers": 0, "user_public_repos": 1},
-            {"user_login": "normal-dev", "title": "Fix bug", "created_at": None,
-             "merged": True, "comments": 3, "user_followers": 10, "user_public_repos": 20},
+            {
+                "user_login": "evil-org",
+                "title": "Add feature",
+                "created_at": None,
+                "merged": False,
+                "comments": 0,
+                "user_followers": 0,
+                "user_public_repos": 1,
+            },
+            {
+                "user_login": "normal-dev",
+                "title": "Fix bug",
+                "created_at": None,
+                "merged": True,
+                "comments": 3,
+                "user_followers": 10,
+                "user_public_repos": 20,
+            },
         ]
         result = fetcher.fetch({"slug": "victim/repo", "recent_prs": prs})
         rep = result["contributor_reputation"]
@@ -108,8 +150,17 @@ class TestLocalDBFetcher:
     def test_contributor_reputation_clean(self, seed_file):
         store = ReputationStore(seed_path=seed_file)
         fetcher = LocalDBFetcher(store=store)
-        prs = [{"user_login": "legit-dev", "title": "Fix", "created_at": None,
-                "merged": True, "comments": 2, "user_followers": 50, "user_public_repos": 30}]
+        prs = [
+            {
+                "user_login": "legit-dev",
+                "title": "Fix",
+                "created_at": None,
+                "merged": True,
+                "comments": 2,
+                "user_followers": 50,
+                "user_public_repos": 30,
+            }
+        ]
         result = fetcher.fetch({"slug": "owner/repo", "recent_prs": prs})
         assert result["contributor_reputation"]["score"] == 0.0
 
@@ -123,16 +174,19 @@ class TestLocalDBFetcher:
 class TestContributorReputationPropagation:
     def _make_store(self, tmp_path):
         from legitifier_pkg.feedback.store import FeedbackStore
+
         return FeedbackStore(db_path=tmp_path / "scans.db")
 
     def _make_report(self, risk_score: float, flagged_logins: list[str]):
         from unittest.mock import MagicMock
-        from legitifier_pkg.core.models import ScanReport, Verdict, HeuristicResult, Severity
-        from legitifier_pkg.core.models import ScoringConfig, HeuristicConfig
+
+        from legitifier_pkg.core.models import HeuristicResult, ScanReport, Verdict
 
         verdict = (
-            Verdict.SCAM if risk_score >= 75
-            else Verdict.LIKELY_SCAM if risk_score >= 50
+            Verdict.SCAM
+            if risk_score >= 75
+            else Verdict.LIKELY_SCAM
+            if risk_score >= 50
             else Verdict.CLEAN
         )
 
@@ -140,7 +194,10 @@ class TestContributorReputationPropagation:
         contrib_result.heuristic_id = "contributor_reputation"
         contrib_result.triggered = bool(flagged_logins)
         contrib_result.score = 70.0 if flagged_logins else 0.0
-        contrib_result.raw_data = {"flagged_logins": [{"login": l} for l in flagged_logins], "sample_size": 5}
+        contrib_result.raw_data = {
+            "flagged_logins": [{"login": login} for login in flagged_logins],
+            "sample_size": 5,
+        }
         contrib_result.evidence = "test"
         contrib_result.severity = MagicMock()
         contrib_result.severity.value = "high"
@@ -154,7 +211,9 @@ class TestContributorReputationPropagation:
 
     def test_records_flagged_contributors_on_scam(self, tmp_path):
         store = self._make_store(tmp_path)
-        report = self._make_report(risk_score=80.0, flagged_logins=["bad_actor1", "bad_actor2"])
+        report = self._make_report(
+            risk_score=80.0, flagged_logins=["bad_actor1", "bad_actor2"]
+        )
         count = store.record_contributor_reputation(report)
         # 2 flagged contributors + 1 owner (risk_score >= 75)
         assert count >= 2
@@ -175,13 +234,16 @@ class TestContributorReputationPropagation:
 
     def test_recorded_contributor_found_by_lookup(self, tmp_path):
         from legitifier_pkg.data.loader import ReputationStore
+
         store = self._make_store(tmp_path)
         report = self._make_report(risk_score=60.0, flagged_logins=["bad_actor"])
         count = store.record_contributor_reputation(report)
         assert count > 0
 
         # Instantiate AFTER insertion so entries are loaded from DB
-        rep_store = ReputationStore(seed_path=tmp_path / "empty.jsonl", db_path=store._path)
+        rep_store = ReputationStore(
+            seed_path=tmp_path / "empty.jsonl", db_path=store._path
+        )
         entry = rep_store.lookup("bad_actor")
         assert entry is not None
         assert entry.verdict.value in ("SUSPICIOUS", "SCAM")

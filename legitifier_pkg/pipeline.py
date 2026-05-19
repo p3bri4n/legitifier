@@ -45,6 +45,7 @@ class Pipeline:
     def run(self, repo_url: str) -> tuple[ScanReport, int]:
         """Returns (report, scan_id) — scan_id used to attach feedback later."""
         import time
+
         self._registry.load()
 
         errors: list[str] = []
@@ -55,7 +56,7 @@ class Pipeline:
             if not self._silent:
                 console.print(f"[dim]⠋ {msg}[/]", end="\r")
 
-        with (console.status("", spinner="dots") if not self._silent else _NullContext()):
+        with console.status("", spinner="dots") if not self._silent else _NullContext():
             _step("Fetching repository data...")
             fetch_error: Exception | None = None
             try:
@@ -105,7 +106,9 @@ class Pipeline:
 
         elapsed = round(time.monotonic() - started_at, 1)
         whitelisted = data.get("owner_reputation", {}).get("verdict") == "CLEAN"
-        report = self._scorer.aggregate(repo_url, results, errors, whitelisted=whitelisted, duration=elapsed)
+        report = self._scorer.aggregate(
+            repo_url, results, errors, whitelisted=whitelisted, duration=elapsed
+        )
         scan_id = self._store.save_scan(report)
         # Propagate reputation from scam contributors
         self._store.record_contributor_reputation(report)
@@ -118,4 +121,3 @@ class _NullContext:
 
     def __exit__(self, *_: object) -> None:
         pass
-
