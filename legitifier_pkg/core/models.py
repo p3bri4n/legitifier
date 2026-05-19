@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -64,7 +64,7 @@ class ScanReport(BaseModel):
     risk_score: float = Field(ge=0.0, le=100.0)
     verdict: Verdict
     results: list[HeuristicResult]
-    scanned_at: datetime = Field(default_factory=datetime.utcnow)
+    scanned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     errors: list[str] = Field(default_factory=list)
     scan_duration_seconds: float = 0.0
     scanner_version: str = "unknown"
