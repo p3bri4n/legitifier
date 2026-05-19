@@ -30,6 +30,10 @@ class FeedbackStore:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
+    @property
+    def path(self) -> Path:
+        return self._path
+
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self._path)
 

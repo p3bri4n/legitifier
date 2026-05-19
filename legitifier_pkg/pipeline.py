@@ -35,7 +35,7 @@ class Pipeline:
         self._github = GitHubFetcher(token=github_token)
         self._llm = LLMFetcher(llm_client) if llm_client else None
         self._local_db = LocalDBFetcher(
-            store=ReputationStore(db_path=store._path if store else None)
+            store=ReputationStore(db_path=store.path if store else None)
         )
         self._registry = registry or HeuristicRegistry()
         self._scorer = scorer or Scorer()
