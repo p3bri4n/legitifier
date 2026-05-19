@@ -392,12 +392,49 @@ def cache_clear(
 @app.command()
 def export(
     output: Path = typer.Argument(Path("dataset.jsonl"), help="Output JSONL file"),
+    anonymize: bool = typer.Option(
+        False,
+        "--anonymize",
+        help="Replace GitHub logins with stable hashes (publish-safe)",
+    ),
 ) -> None:
     """Export annotated scans as a JSONL training dataset."""
     from legitifier_pkg.feedback.export import export_jsonl
 
-    count = export_jsonl(output)
-    typer.echo(f"Exported {count} annotated records to {output}")
+    count = export_jsonl(output, anonymize=anonymize)
+    suffix = " (anonymized)" if anonymize else ""
+    typer.echo(f"Exported {count} annotated records to {output}{suffix}")
+
+
+@app.command()
+def forget(
+    login: str = typer.Argument(
+        ..., help="GitHub login to remove from all local databases"
+    ),
+    deep: bool = typer.Option(
+        False, "--deep", help="Also scrub from nested report data"
+    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation"),
+) -> None:
+    """Erase all traces of a GitHub user from local storage (GDPR Article 17)."""
+    if not yes:
+        confirmed = Confirm.ask(
+            f"Permanently erase all data about '{login}'? This cannot be undone."
+        )
+        if not confirmed:
+            raise typer.Exit(code=1)
+    store = FeedbackStore()
+    counts = store.forget_login(login)
+    if deep:
+        deep_counts = store.forget_login_deep(login)
+        counts.update(deep_counts)
+    console.print(
+        f"✅ Erased: {counts['scans']} scans, {counts['feedback']} feedbacks, "
+        f"{counts['reputation']} reputation entries, "
+        f"{counts['cache']} cache entries"
+        + (f", {counts.get('reports_scrubbed', 0)} reports scrubbed" if deep else "")
+        + f" for '{login}'."
+    )
 
 
 def _collect_feedback(scan_id: int, auto_verdict: Verdict) -> None:

@@ -14,6 +14,24 @@ from legitifier_pkg.feedback.models import Confidence, FeedbackRecord
 _DB_PATH = Path.home() / ".legitifier" / "scans.db"
 
 
+def _scrub_login_from_report(
+    obj: object, login: str, replacement: str = "[removed]"
+) -> None:
+    """Recursively replace login string occurrences in a nested dict/list."""
+    if isinstance(obj, dict):
+        for k, v in list(obj.items()):
+            if isinstance(v, str) and login in v:
+                obj[k] = v.replace(login, replacement)  # type: ignore[index]
+            else:
+                _scrub_login_from_report(v, login, replacement)
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            if isinstance(item, str) and login in item:
+                obj[i] = item.replace(login, replacement)  # type: ignore[index]
+            else:
+                _scrub_login_from_report(item, login, replacement)
+
+
 def _default_db() -> Path:
     return _DB_PATH
 
@@ -305,6 +323,72 @@ class FeedbackStore:
     def reset_search_offset(self, query: str) -> None:
         with self._connect() as conn:
             conn.execute("DELETE FROM search_offsets WHERE query = ?", (query,))
+
+    def forget_login(self, login: str) -> dict[str, int]:
+        """Remove all references to a GitHub login from local DB (GDPR Article 17)."""
+        counts = {"scans": 0, "feedback": 0, "reputation": 0, "cache": 0}
+
+        with self._connect() as conn:
+            cur = conn.execute("DELETE FROM reputation WHERE login = ?", (login,))
+            counts["reputation"] = cur.rowcount
+
+            like_patterns = [f"%/{login}/%", f"%/{login}"]
+            rows = conn.execute(
+                "SELECT id FROM scans WHERE repo_url LIKE ? OR repo_url LIKE ?",
+                tuple(like_patterns),
+            ).fetchall()
+            scan_ids = [r[0] for r in rows]
+
+            if scan_ids:
+                placeholders = ",".join("?" * len(scan_ids))
+                cur = conn.execute(
+                    f"DELETE FROM feedback WHERE scan_id IN ({placeholders})",
+                    scan_ids,
+                )
+                counts["feedback"] = cur.rowcount
+                cur = conn.execute(
+                    f"DELETE FROM scans WHERE id IN ({placeholders})",
+                    scan_ids,
+                )
+                counts["scans"] = cur.rowcount
+
+        try:
+            from legitifier_pkg.cache import FetchCache
+
+            cache = FetchCache()
+            with cache._connect() as conn:
+                cur = conn.execute(
+                    "DELETE FROM cache WHERE key LIKE ? OR key LIKE ?",
+                    (f"{login}/%", f"%/{login}/%"),
+                )
+                counts["cache"] = cur.rowcount
+        except Exception:
+            pass
+
+        return counts
+
+    def forget_login_deep(self, login: str) -> dict[str, int]:
+        """Slow variant: scan every report_json for login and scrub it."""
+        import json as _json
+
+        counts = {"reports_scrubbed": 0}
+
+        with self._connect() as conn:
+            rows = conn.execute("SELECT id, report_json FROM scans").fetchall()
+
+        for scan_id, report_json in rows:
+            if login not in report_json:
+                continue
+            data = _json.loads(report_json)
+            _scrub_login_from_report(data, login)
+            with self._connect() as conn:
+                conn.execute(
+                    "UPDATE scans SET report_json = ? WHERE id = ?",
+                    (_json.dumps(data), scan_id),
+                )
+            counts["reports_scrubbed"] += 1
+
+        return counts
 
     def record_contributor_reputation(
         self,

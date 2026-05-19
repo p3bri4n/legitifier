@@ -120,6 +120,15 @@ legitifier cache-clear --all    # clear everything
 
 Exit code is `0` if Trust ≥ 50, `1` otherwise — useful in CI pipelines.
 
+### Privacy
+
+legitifier processes GitHub usernames as personal data. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
+
+```bash
+legitifier forget some-login              # GDPR Article 17 erasure
+legitifier export data.jsonl --anonymize  # publish-safe export
+```
+
 ---
 
 ## 🧠 How it works
