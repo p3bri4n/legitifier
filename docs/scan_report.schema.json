@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "HeuristicResult": {
+      "description": "Result of running a single heuristic.\n\nscore: Risk signal strength, 0\u2013100. Higher = stronger fraud signal.\n       Independent of severity (which is the heuristic's category-level weight).",
+      "properties": {
+        "category": {
+          "default": "",
+          "title": "Category",
+          "type": "string"
+        },
+        "evidence": {
+          "title": "Evidence",
+          "type": "string"
+        },
+        "heuristic_id": {
+          "title": "Heuristic Id",
+          "type": "string"
+        },
+        "raw_data": {
+          "additionalProperties": true,
+          "title": "Raw Data",
+          "type": "object"
+        },
+        "score": {
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "triggered": {
+          "title": "Triggered",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "heuristic_id",
+        "score",
+        "triggered",
+        "evidence",
+        "severity"
+      ],
+      "title": "HeuristicResult",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "enum": [
+        "CLEAN",
+        "SUSPICIOUS",
+        "LIKELY_SCAM",
+        "SCAM",
+        "UNKNOWN"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Final scan output.\n\nrisk_score: Aggregated 0\u2013100. Higher = more suspicious.\n            The terminal shows Trust = 100 - risk_score for readability,\n            but JSON output and the exit code use risk_score directly.",
+  "properties": {
+    "errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "repo_url": {
+      "title": "Repo Url",
+      "type": "string"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/HeuristicResult"
+      },
+      "title": "Results",
+      "type": "array"
+    },
+    "risk_score": {
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Risk Score",
+      "type": "number"
+    },
+    "scan_duration_seconds": {
+      "default": 0.0,
+      "title": "Scan Duration Seconds",
+      "type": "number"
+    },
+    "scanned_at": {
+      "format": "date-time",
+      "title": "Scanned At",
+      "type": "string"
+    },
+    "scanner_version": {
+      "default": "unknown",
+      "title": "Scanner Version",
+      "type": "string"
+    },
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    }
+  },
+  "required": [
+    "repo_url",
+    "risk_score",
+    "verdict",
+    "results"
+  ],
+  "title": "ScanReport",
+  "type": "object"
+}

@@ -1,4 +1,4 @@
-.PHONY: install install-llm install-all test lint lint-fix coverage clean bump sync-data calibrate help
+.PHONY: install install-llm install-all test lint lint-fix coverage clean bump sync-data calibrate schema help
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -51,6 +51,9 @@ sync-data:
 
 calibrate:
 	$(PYTHON) scripts/calibrate.py
+
+schema:
+	$(PYTHON) scripts/export_schema.py
 
 bump:
 	$(PYTHON) scripts/bump_version.py

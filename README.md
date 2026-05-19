@@ -120,6 +120,8 @@ legitifier cache-clear --all    # clear everything
 
 Exit code is `0` if `risk_score < 50` (verdict CLEAN or SUSPICIOUS, displayed as Trust ≥ 50/100), `1` otherwise — useful in CI pipelines.
 
+The JSON schema for `--output json` is available at [`docs/scan_report.schema.json`](docs/scan_report.schema.json).
+
 ### Privacy
 
 legitifier processes GitHub usernames as personal data. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
