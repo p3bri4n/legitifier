@@ -1,4 +1,4 @@
-.PHONY: install install-llm install-all test lint lint-fix coverage clean bump sync-data help
+.PHONY: install install-llm install-all test lint lint-fix coverage clean bump sync-data calibrate help
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -13,6 +13,7 @@ help:
 	@echo "  make lint-fix     — auto-fix lint and format issues"
 	@echo "  make coverage     — run tests with coverage report"
 	@echo "  make sync-data    — copy data/ files into package"
+	@echo "  make calibrate    — run heuristic weight calibration"
 	@echo "  make bump         — bump version to YYYY.MMDD.hhmm"
 	@echo "  make clean        — remove venv and caches"
 
@@ -47,6 +48,9 @@ coverage:
 
 sync-data:
 	$(PYTHON) scripts/sync_data.py
+
+calibrate:
+	$(PYTHON) scripts/calibrate.py
 
 bump:
 	$(PYTHON) scripts/bump_version.py
