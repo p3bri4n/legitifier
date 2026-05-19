@@ -23,4 +23,5 @@ Only the latest minor version receives security patches.
 
 ## Threat model
 
-See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) (created in P0-F).
+See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the full threat model,
+including in-scope threats, complementary tools, and maintenance governance.
