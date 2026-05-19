@@ -40,6 +40,44 @@ Open a PR adding lines to `data/seed.jsonl`. Include:
 Do not submit entries based solely on a high legitifier score.
 Human review is required before merging into the seed.
 
+## How confidence affects scoring
+
+A seed entry's `confidence` acts as a **multiplier** on its risk contribution:
+
+- `verdict: SCAM` → base contribution = 90
+- `verdict: SUSPICIOUS` → base contribution = 50
+- `verdict: CLEAN` → base contribution = 0 (caps the score instead, see below)
+
+| Confidence | Multiplier |
+|---|---|
+| `certain` | ×1.0 |
+| `probable` | ×0.6 |
+| `unsure` | ×0.3 |
+
+| Entry | Risk contribution |
+|---|---|
+| SCAM + certain | 90 |
+| SCAM + probable | 54 |
+| SCAM + unsure | 27 |
+| SUSPICIOUS + certain | 50 |
+| SUSPICIOUS + probable | 30 |
+| SUSPICIOUS + unsure | 15 |
+
+## Whitelist behavior
+
+`CLEAN` entries cap the repo's final `risk_score` instead of contributing to it:
+
+| Confidence | Effect |
+|---|---|
+| `certain` | Hard cap at 49 (SUSPICIOUS max) |
+| `probable` | Hard cap at 65 (LIKELY_SCAM max) |
+| `unsure` | Soft −10 penalty, no hard cap |
+
+The cap is **bypassed** when 2 or more critical-severity signals from the `code_quality` or
+`content_claims` heuristic categories trigger simultaneously. This handles supply chain
+compromise scenarios (e.g. a trusted account taken over to distribute malware).
+See `docs/THREAT_MODEL.md` for the full rationale.
+
 ## Example entries
 
 ```jsonl

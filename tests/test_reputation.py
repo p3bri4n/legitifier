@@ -72,21 +72,32 @@ class TestReputationStore:
 
     def test_score_scam_certain(self, seed_file):
         store = ReputationStore(seed_path=seed_file)
-        score = store.score("evil-org")
+        score = store.risk_contribution("evil-org")
         assert score == 90.0  # 90 * 1.0 (certain)
 
     def test_score_suspicious_probable(self, seed_file):
         store = ReputationStore(seed_path=seed_file)
-        score = store.score("maybe-bad")
+        score = store.risk_contribution("maybe-bad")
         assert score == 30.0  # 50 * 0.6 (probable)
 
     def test_score_clean_returns_zero(self, seed_file):
         store = ReputationStore(seed_path=seed_file)
-        assert store.score("legit-dev") == 0.0
+        assert store.risk_contribution("legit-dev") == 0.0
 
     def test_score_unknown_returns_zero(self, seed_file):
         store = ReputationStore(seed_path=seed_file)
-        assert store.score("nobody") == 0.0
+        assert store.risk_contribution("nobody") == 0.0
+
+    def test_score_alias_emits_deprecation_warning(self, seed_file):
+        import warnings
+
+        store = ReputationStore(seed_path=seed_file)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            store.score("nobody")
+            assert any(
+                issubclass(warning.category, DeprecationWarning) for warning in w
+            )
 
     def test_ignores_comments_and_blank_lines(self, tmp_path):
         path = tmp_path / "seed.jsonl"

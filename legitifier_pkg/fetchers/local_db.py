@@ -46,7 +46,7 @@ class LocalDBFetcher:
                 "matched_type": None,
             }
         return {
-            "score": self._store.score(entry.key),
+            "score": self._store.risk_contribution(entry.key),
             "verdict": entry.verdict.value,
             "confidence": entry.confidence.value,
             "note": entry.note,

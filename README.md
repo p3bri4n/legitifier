@@ -118,7 +118,7 @@ legitifier cache-clear          # purge expired entries
 legitifier cache-clear --all    # clear everything
 ```
 
-Exit code is `0` if Trust ≥ 50, `1` otherwise — useful in CI pipelines.
+Exit code is `0` if `risk_score < 50` (verdict CLEAN or SUSPICIOUS, displayed as Trust ≥ 50/100), `1` otherwise — useful in CI pipelines.
 
 ### Privacy
 
@@ -128,6 +128,32 @@ legitifier processes GitHub usernames as personal data. See [`docs/PRIVACY.md`](
 legitifier forget some-login              # GDPR Article 17 erasure
 legitifier export data.jsonl --anonymize  # publish-safe export
 ```
+
+---
+
+## 📖 Glossary
+
+legitifier uses several distinct scores. Here's how they relate:
+
+| Term | Range | Direction | Where |
+|------|-------|-----------|-------|
+| `risk_score` | 0–100 | Higher = more suspicious | Final JSON report |
+| Trust | 0–100 | Higher = trustworthy | Terminal display only. `= 100 - risk_score`. |
+| Heuristic `score` | 0–100 | Higher = stronger fraud signal | Per-heuristic result |
+| Reputation contribution | 0–100 | Higher = stronger DB suspicion | Weighted by confidence |
+| `confidence` | enum | `certain` > `probable` > `unsure` | Quality of a seed entry. Acts as a **multiplier** on its contribution. |
+| `severity` | enum | `critical` > `high` > `medium` > `low` | Heuristic importance, used as scoring weight |
+
+**Verdict thresholds:**
+
+| `risk_score` | Verdict |
+|---|---|
+| < 25 | ✅ CLEAN |
+| 25–49 | ⚠️ SUSPICIOUS |
+| 50–74 | 🚨 LIKELY_SCAM |
+| ≥ 75 | 💀 SCAM |
+
+Display uses Trust for readability; scripts should parse `risk_score` from `--output json`.
 
 ---
 
@@ -173,7 +199,7 @@ The output shows scan duration and only the heuristics that triggered — clean 
 
 legitifier ships with a seed database (`data/seed.jsonl`) of known scam actors and verified legitimate organizations. It is loaded at startup and merged with your local scan history.
 
-- **Whitelist** — owners or repos marked `CLEAN` have their score capped at `SUSPICIOUS` (49/100), preventing false positives on known legitimate projects. The seed includes major AI organizations (HuggingFace, Meta Research, Google DeepMind, Microsoft, OpenAI, Anthropic, Mistral AI, ggerganov).
+- **Whitelist** — owners or repos marked `CLEAN` have their score capped based on confidence: `certain` → 49/100, `probable` → 65/100, `unsure` → −10 bonus only. This prevents false positives on known legitimate projects. The cap is bypassed when 2+ critical signals from code or content categories trigger simultaneously (supply chain compromise pattern). See [Limitations](#%EF%B8%8F-limitations) for the security implications.
 - **Blacklist** — owners or repos marked `SCAM` or `SUSPICIOUS` contribute directly to the final score, weighted by confidence level (`certain` → 1.0, `probable` → 0.6, `unsure` → 0.3).
 - **Local enrichment** — every time you use `--feedback`, your verdict is stored in `~/.legitifier/scans.db` and factored into future scans of repos from the same owner or contributor.
 - **Contributor propagation** — after each LIKELY_SCAM or SCAM scan, PR authors flagged as suspicious are automatically recorded in the local reputation DB. Future scans of repos where these contributors appear are penalized accordingly.
@@ -328,6 +354,7 @@ If a legitimate repo scores poorly, open an issue with the repo URL and the outp
 - Code analysis is limited to files in the repo root and common source directories. Obfuscated or minified code is not analyzed.
 - `readme_llm_analysis` requires an API key and is only as good as the prompt. Claims in languages other than English may score less accurately.
 - A high score is a signal, not proof. Some projects are just poorly maintained. Human judgment is always required before acting on a verdict.
+- **Whitelisting** — owners listed as `CLEAN` in the reputation database have their final risk score capped (`certain` → 49/100, `probable` → 65/100, `unsure` → −10 only). This prevents false positives on major orgs but means a compromised legitimate account won't be flagged as SCAM automatically. **Exception**: 2+ critical signals from code or content categories bypass the cap (supply chain compromise pattern). Supply chain incidents still benefit from manual review.
 
 ---
 

@@ -51,6 +51,12 @@ class HeuristicConfig(BaseModel):
 
 
 class HeuristicResult(BaseModel):
+    """Result of running a single heuristic.
+
+    score: Risk signal strength, 0–100. Higher = stronger fraud signal.
+           Independent of severity (which is the heuristic's category-level weight).
+    """
+
     heuristic_id: str
     score: float = Field(ge=0.0, le=100.0)
     triggered: bool
@@ -61,6 +67,13 @@ class HeuristicResult(BaseModel):
 
 
 class ScanReport(BaseModel):
+    """Final scan output.
+
+    risk_score: Aggregated 0–100. Higher = more suspicious.
+                The terminal shows Trust = 100 - risk_score for readability,
+                but JSON output and the exit code use risk_score directly.
+    """
+
     repo_url: str
     risk_score: float = Field(ge=0.0, le=100.0)
     verdict: Verdict

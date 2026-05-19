@@ -29,6 +29,9 @@ def _find_seed() -> Path:
 
 
 _SEED_PATH = _find_seed()
+
+# Multiplier applied to reputation entry contributions.
+# Reflects how reliable the source is, not how severe the verdict is.
 _CONFIDENCE_WEIGHT = {
     ReputationConfidence.CERTAIN: 1.0,
     ReputationConfidence.PROBABLE: 0.6,
@@ -94,11 +97,16 @@ class ReputationStore:
             return None
         return max(entries, key=lambda e: _CONFIDENCE_WEIGHT[e.confidence])
 
-    def score(self, key: str) -> float:
+    def risk_contribution(self, key: str) -> float:
         """
-        Returns a 0-100 reputation score (higher = more suspicious).
-        0 if unknown, CLEAN, or auto-propagated with unsure confidence.
-        Weighted by confidence otherwise.
+        Compute this entry's contribution to a repo's risk_score (0–100).
+
+        Formula:
+            base = 90 if verdict == SCAM else 50 if verdict == SUSPICIOUS else 0
+            multiplier = {certain: 1.0, probable: 0.6, unsure: 0.3}[confidence]
+            contribution = base * multiplier
+
+        Returns 0.0 for unknown keys, CLEAN entries, or auto-propagated unsure entries.
         """
         entry = self.lookup(key)
         if not entry or entry.verdict == ReputationVerdict.CLEAN:
@@ -108,6 +116,17 @@ class ReputationStore:
             return 0.0
         base = 90.0 if entry.verdict == ReputationVerdict.SCAM else 50.0
         return round(base * _CONFIDENCE_WEIGHT[entry.confidence], 1)
+
+    def score(self, key: str) -> float:
+        """Deprecated: use risk_contribution() instead."""
+        import warnings
+
+        warnings.warn(
+            "ReputationStore.score() is deprecated, use risk_contribution() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.risk_contribution(key)
 
     def all_keys(self) -> Iterable[str]:
         return self._entries.keys()
